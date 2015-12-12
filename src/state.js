@@ -18,19 +18,19 @@ function set(screen) {
 	pending = screen;
 }
 
-function render(curTime, gl) {
+function render(r) {
 	var newScreen = pending;
 	pending = null;
 	if (newScreen) {
 		if (current) {
-			current.destroy(gl);
+			current.destroy(r);
 			current = null;
 		}
-		newScreen.init(curTime, gl);
+		newScreen.init(r);
 		current = newScreen;
 	}
 	if (current) {
-		current.render.apply(current, arguments);
+		current.render(r);
 	}
 }
 

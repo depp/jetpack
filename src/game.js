@@ -72,27 +72,28 @@ function Game() {
 /*
  * Initialize the screen.
  */
-Game.prototype.init = function(curTime) {
-	this.time = new time.Time(this, curTime);
+Game.prototype.init = function(r) {
+	this.time = new time.Time(this, r.time);
 	control.game.enable();
 };
 
 /*
  * Destroy the screen
  */
-Game.prototype.destroy = function() {
+Game.prototype.destroy = function(r) {
 	control.game.disable();
 };
 
 /*
  * Render the game screen, updating the game state as necessary.
  */
-Game.prototype.render = function(curTime, gl, width, height, aspect) {
-	this.time.update(curTime);
+Game.prototype.render = function(r) {
+	var gl = r.gl;
+	this.time.update(r.time);
 	var frac = this.time.frac;
 	var mvp = this.camera.mvp(frac);
 
-	gl.viewport(0, 0, width, height);
+	gl.viewport(0, 0, r.width, r.height);
 	gl.clearColor(0.0, 0.0, 0.0, 1.0);
 	gl.clear(gl.COLOR_BUFFER_BIT);
 
@@ -119,7 +120,6 @@ Game.prototype.step = function(dt) {
 		fy += PLAYER_MASS * GRAVITY * 2;
 	}
 	fx += PLAYER_SPEED * PLAYER_SPEED * PLAYER_DRAG;
-	// console.log(fx, fy);
 	this.bbody.applyForce([fx, fy]);
 	this.world.step(dt);
 	this.camera.step();

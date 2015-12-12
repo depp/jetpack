@@ -1,16 +1,17 @@
 precision mediump float;
 
-varying vec2 vPos;
-
 const int N = 2;
+uniform vec2 Scale;
+uniform vec2 Offset;
 uniform vec4 Color[N];
 uniform vec4 Wave[N];
 uniform float InvRadius[N];
 
 void main() {
     vec3 acc = vec3(1.0);
-    float angle = atan(vPos.x, vPos.y);
-    float r = length(vPos);
+    vec2 pos = gl_FragCoord.xy * Scale + Offset;
+    float angle = atan(pos.y, pos.x);
+    float r = length(pos);
     for (int i = 0; i < N; i++) {
         float wave = 0.5 + 0.5 * sin((angle + Wave[i].y) * Wave[i].x);
         float y = mix(Wave[i].z, Wave[i].w, wave) *

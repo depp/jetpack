@@ -97,12 +97,14 @@ function render(curTime) {
 	}
 
 	handle = window.requestAnimationFrame(render);
-	state.render(
-		curTime,
-		gl,
-		gl.drawingBufferWidth,
-		gl.drawingBufferHeight,
-		w / h);
+	gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+	state.render({
+		time: curTime,
+		gl: gl,
+		width: gl.drawingBufferWidth,
+		height: gl.drawingBufferHeight,
+		aspect: w / h,
+	});
 }
 
 window.Game = {
