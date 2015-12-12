@@ -32,8 +32,9 @@
 	var maindiv = document.getElementById('game');
 	canvas = document.createElement('canvas');
 	maindiv.appendChild(canvas);
-	gl = canvas.getContext('webgl') ||
-		canvas.getContext('experimental-webgl');
+	var param = { alpha: false };
+	gl = canvas.getContext('webgl', param) ||
+		canvas.getContext('experimental-webgl', param);
 	if (!gl) {
 		return fail(ERR_WEBGL);
 	}
