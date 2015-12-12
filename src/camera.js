@@ -15,17 +15,13 @@ var mat4 = glm.mat4;
 /*
  * Target position calculator.
  */
-function Tracker(arg) {
+function Tracker() {
 	this.targets = [];
 	this.lockX = false;
 	this.lockY = false;
 	this.pos = [0, 0];
 	this.offset = [0, 0];
-
-	if (arg) {
-		this.set(arg);
-		this.update();
-	}
+	this.leading = 0;
 }
 
 /*
@@ -37,8 +33,9 @@ function Tracker(arg) {
  * arg.targetY: Locked Y position
  * arg.offsetX: X offset from tracked targets
  * arg.offsetY: Y offset from tracked targets
+ * leading: How much to lead the targets
  */
-Tracker.prototype.set = function(arg) {
+Tracker.prototype.set = function(arg, leading) {
 	var newTargets = null;
 	if (arg.hasOwnProperty('target')) {
 		if (!newTargets) {
@@ -81,6 +78,8 @@ Tracker.prototype.set = function(arg) {
 	if (arg.hasOwnProperty('offsetY')) {
 		this.offset[1] = arg.offsetY;
 	}
+
+	this.leading = leading;
 };
 
 /*
@@ -90,11 +89,12 @@ Tracker.prototype.update = function() {
 	if (!this.targets.length) {
 		return;
 	}
-	var x = 0, y = 0, t = this.targets, p;
+	var x = 0, y = 0, t = this.targets, p, v, lead = this.leading;
 	for (var i = 0; i < t.length; i++) {
 		p = t[i].position;
-		x += p[0];
-		y += p[1];
+		v = t[i].velocity;
+		x += p[0] + v[0] * lead;
+		y += p[1] + v[1] * lead;
 	}
 	var a = 1.0 / t.length;
 	if(!this.lockX) {
@@ -112,15 +112,26 @@ Tracker.prototype.update = function() {
  *
  * pos: Initial value
  */
-function Filter(order, time, pos) {
+function Filter(order, time) {
 	this.order = order;
-	this.data = [];
+	this.data = new Float64Array(order * 2);
 	this.coeff = Math.pow(time, 1 / param.RATE);
-	this.pos = [0, 0];
-	for (var i = 0; i < order; i++) {
-		this.data.push(pos[0], pos[1]);
-	}
+	this.pos = new Float64Array(2);
+	// Extra leading needed to compensate for the filter
+	this.leading = this.order * this.coeff / ((1 - this.coeff) * param.RATE);
 }
+
+/*
+ * Set the current filter value, erasing any history.
+ *
+ * inPos: The new input and output value
+ */
+Filter.prototype.reset = function(inPos) {
+	var order = this.order;
+	for (var i = 0; i < this.order; i++) {
+		this.data.set(inPos, i * 2);
+	}
+};
 
 /*
  * Update the filtered position.
@@ -156,13 +167,15 @@ Filter.prototype.update = function(inPos) {
  */
 function Camera(arg) {
 	var p = param.CAMERA;
+	// How much to lead the objects
+	this._leading = 0;
 	// Object tracking
-	this._track = new Tracker(arg);
+	this._track = new Tracker();
 	// Position filter
-	this._filter = new Filter(p.FILTER_ORDER, p.FILTER_TIME, this._track.pos);
+	this._filter = new Filter(p.FILTER_ORDER, p.FILTER_TIME);
 	// Position interpolation, previous and current frame
-	this._pos0 = vec2.clone(this._filter.pos);
-	this._pos1 = vec2.clone(this._pos0);
+	this._pos0 = vec2.create();
+	this._pos1 = vec2.create();
 	// Model view projection matrix
 	this._translate = glm.vec3.create();
 	this._proj = mat4.create();
@@ -173,7 +186,22 @@ function Camera(arg) {
 	// Public results
 	this.MVP = null;
 	this.pos = vec2.create();
+
+	if (arg) {
+		this.set(arg);
+		this.reset();
+	}
 }
+
+/*
+ * Reset the camera, clearing the filter history.
+ */
+Camera.prototype.reset = function() {
+	this._track.update();
+	this._filter.reset(this._track.pos);
+	vec2.copy(this._pos0, this._filter.pos);
+	vec2.copy(this._pos1, this._pos0);
+};
 
 /*
  * Advance the camera state one frame.
@@ -196,7 +224,10 @@ Camera.prototype.step = function() {
  * arg.offsetY: Y offset from tracked targets
  */
 Camera.prototype.set = function(arg) {
-	this._track.set(arg);
+	if (arg.hasOwnProperty('leading')) {
+		this._leading = arg.leading;
+	}
+	this._track.set(arg, this._leading + this._filter.leading);
 };
 
 /*
