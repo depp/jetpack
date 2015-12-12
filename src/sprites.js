@@ -33,7 +33,7 @@ function Sprites() {
  * Draw the sprite layer to the screen.
  * gl: WebGL context
  */
-Sprites.prototype.draw = function(gl) {
+Sprites.prototype.draw = function(gl, mvp) {
 	var i;
 
 	if (this.loadState !== STATE_LOADED) {
@@ -92,12 +92,7 @@ Sprites.prototype.draw = function(gl) {
 	}
 
 	gl.useProgram(this.program.program);
-	gl.uniformMatrix4fv(this.program.MVP, false, new Float32Array([
-		2/64, 0, 0, 0,
-		0, 2/36, 0, 0,
-		0, 0, 1, 0,
-		0, 0, 0, 1,
-	]));
+	gl.uniformMatrix4fv(this.program.MVP, false, mvp);
 	gl.bindBuffer(gl.ARRAY_BUFFER, this.vbuffer);
 	gl.enableVertexAttribArray(0);
 	gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 8, this.voff_pos);

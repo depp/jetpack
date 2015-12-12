@@ -5,6 +5,7 @@
    terms of the MIT license.  See LICENSE.txt for details. */
 'use strict';
 
+var camera = require('./camera');
 var control = require('./control');
 var sprites = require('./sprites');
 var state = require('./state');
@@ -60,6 +61,12 @@ function Game() {
 	});
 	this.plane1.addShape(new p2.Plane());
 	this.world.addBody(this.plane1);
+
+	// Camera
+	this.camera = new camera.Camera({
+		target: this.bbody,
+		targetY: 0,
+	});
 }
 
 /*
@@ -83,6 +90,7 @@ Game.prototype.destroy = function() {
 Game.prototype.render = function(curTime, gl, width, height, aspect) {
 	this.time.update(curTime);
 	var frac = this.time.frac;
+	var mvp = this.camera.mvp(frac);
 
 	gl.viewport(0, 0, width, height);
 	gl.clearColor(0.0, 0.0, 0.0, 1.0);
@@ -91,7 +99,7 @@ Game.prototype.render = function(curTime, gl, width, height, aspect) {
 	this.sprites.clear();
 	var pos = bodyPos(this.bbody, frac);
 	this.sprites.add({ x: pos[0], y: pos[1], radius: 1.0, color: 0xff007fff });
-	this.sprites.draw(gl);
+	this.sprites.draw(gl, mvp);
 };
 
 /*
@@ -111,9 +119,10 @@ Game.prototype.step = function(dt) {
 		fy += PLAYER_MASS * GRAVITY * 2;
 	}
 	fx += PLAYER_SPEED * PLAYER_SPEED * PLAYER_DRAG;
-	console.log(fx, fy);
+	// console.log(fx, fy);
 	this.bbody.applyForce([fx, fy]);
 	this.world.step(dt);
+	this.camera.step();
 };
 
 // We export through the state module.

@@ -11,4 +11,9 @@ module.exports = {
 	// Maximum update interval, in s.  If this much time passes without
 	// an update, the game temporarily pauses.
 	MAX_UPDATE_INTERVAL: 0.5,
+
+	CAMERA: {
+		FILTER_ORDER: 3,
+		FILTER_TIME: 0.001,
+	},
 };
