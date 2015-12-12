@@ -58,7 +58,7 @@ Load.prototype.destroy = function(gl) {
  * Render the loading screen.
  */
 Load.prototype.render = function(curTime, gl, width, height, aspect) {
-	if (curTime >= this.startTime + 3000) {
+	if (curTime >= this.startTime + 100) {
 		state.set(new state.Game());
 	}
 

@@ -58,9 +58,9 @@ Sprites.prototype.draw = function(gl) {
 			this.vbuffer = gl.createBuffer();
 		}
 		this.voff_pos = 0;
-		this.voff_color = this.count * 16;
+		this.voff_color = this.count * 32;
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.vbuffer);
-		gl.bufferData(gl.ARRAY_BUFFER, this.count * 32, gl.DYNAMIC_DRAW);
+		gl.bufferData(gl.ARRAY_BUFFER, this.count * 48, gl.DYNAMIC_DRAW);
 		gl.bufferSubData(
 			gl.ARRAY_BUFFER,
 			this.voff_pos,
@@ -93,14 +93,14 @@ Sprites.prototype.draw = function(gl) {
 
 	gl.useProgram(this.program.program);
 	gl.uniformMatrix4fv(this.program.MVP, false, new Float32Array([
-		2/800, 0, 0, 0,
-		0, 2/450, 0, 0,
+		2/64, 0, 0, 0,
+		0, 2/36, 0, 0,
 		0, 0, 1, 0,
 		0, 0, 0, 1,
 	]));
 	gl.bindBuffer(gl.ARRAY_BUFFER, this.vbuffer);
 	gl.enableVertexAttribArray(0);
-	gl.vertexAttribPointer(0, 2, gl.SHORT, false, 4, this.voff_pos);
+	gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 8, this.voff_pos);
 	gl.enableVertexAttribArray(1);
 	gl.vertexAttribPointer(1, 4, gl.UNSIGNED_BYTE, true, 4, this.voff_color);
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.ibuffer);
@@ -128,7 +128,7 @@ Sprites.prototype.add = function() {
 		while (new_count > new_capacity) {
 			new_capacity *= 2;
 		}
-		var new_vdata_pos = new Int16Array(new_capacity * 8);
+		var new_vdata_pos = new Float32Array(new_capacity * 8);
 		if (this.vdata_pos) {
 			new_vdata_pos.set(this.vdata_pos);
 		}
@@ -144,7 +144,7 @@ Sprites.prototype.add = function() {
 
 	for (i = 0; i < arguments.length; i++) {
 		var x = arguments[i].x, y = arguments[i].y;
-		var x0 = x - 16, x1 = x + 16, y0 = y - 16, y1 = y + 16;
+		var x0 = x - 1, x1 = x + 1, y0 = y - 1, y1 = y + 1;
 		var color = 0x3399ccff;
 		this.vdata_pos.set([x0, y0, x1, y0, x0, y1, x1, y1], i * 8);
 		this.vdata_color.set([color, color, color, color], i * 4);

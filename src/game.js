@@ -37,16 +37,24 @@ function Game() {
 	// Occupants
 	this.bbody = new p2.Body({
 		mass: 5,
-		position: [0, 5],
+		position: [0, 0],
 	});
 	this.bbody.addShape(new p2.Circle({ radius: 1 }));
 	this.world.addBody(this.bbody);
-	this.gbody = new p2.Body({
+
+	this.plane0 = new p2.Body({
 		mass: 0,
-		position: [0, -5],
+		position: [0, -16],
 	});
-	this.gbody.addShape(new p2.Plane());
-	this.world.addBody(this.gbody);
+	this.plane0.addShape(new p2.Plane());
+	this.world.addBody(this.plane0);
+	this.plane1 = new p2.Body({
+		mass: 0,
+		position: [0, 16],
+		angle: Math.PI,
+	});
+	this.plane1.addShape(new p2.Plane());
+	this.world.addBody(this.plane1);
 }
 
 /*
@@ -77,10 +85,7 @@ Game.prototype.render = function(curTime, gl, width, height, aspect) {
 
 	this.sprites.clear();
 	var pos = bodyPos(this.bbody, frac);
-	this.sprites.add({
-		x: pos[0] * 32,
-		y: pos[1] * 32,
-	});
+	this.sprites.add({ x: pos[0], y: pos[1] });
 	this.sprites.draw(gl);
 };
 
