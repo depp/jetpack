@@ -38,5 +38,7 @@ module.exports = {
 			// Jetpack acceleration
 			Jetpack: 150,
 		},
+		// Maximum angle, in degrees, which is considered "ground"
+		GroundAngle: 30,
 	},
 };

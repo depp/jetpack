@@ -5,6 +5,9 @@
    terms of the MIT license.  See LICENSE.txt for details. */
 'use strict';
 
+var glm = require('gl-matrix');
+var vec2 = glm.vec2;
+
 var camera = require('./camera');
 var control = require('./control');
 var filter = require('./filter');
@@ -77,6 +80,8 @@ function Game() {
 		target: this,
 	});
 
+	// Minimum dot product which is considered "ground"
+	this._groundThreshold = Math.cos(g.GroundAngle * (Math.PI / 180));
 	this._drag = g.Player.Drag;
 	this._jetForceUp = g.Player.Mass * g.Player.Jetpack;
 	this._jetForceForward = g.Player.Speed * g.Player.Speed * g.Player.Drag;
@@ -135,6 +140,28 @@ Game.prototype.step = function(dt) {
 	this.bbody.applyForce([fx, fy]);
 	this.world.step(dt);
 	this.camera.step();
+	console.log(this.isGrounded(this.bbody));
+};
+
+/*
+ * Test wether a body is touching the ground.
+ */
+Game.prototype.isGrounded = function(body) {
+	var eqs = this.world.narrowphase.contactEquations;
+	var thresh = this._groundThreshold;
+	for (var i = 0; i< eqs.length; i++){
+		var eq = eqs[i];
+		if (eq.bodyA === body) {
+			if (-eq.normalA[1] >= thresh) {
+				return true;
+			}
+		} else if (eq.bodyB === body) {
+			if (eq.normalA[1] >= thresh) {
+				return true;
+			}
+		}
+	}
+	return false;
 };
 
 /*
