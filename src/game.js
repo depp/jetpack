@@ -7,6 +7,7 @@
 
 var camera = require('./camera');
 var control = require('./control');
+var filter = require('./filter');
 var sprites = require('./sprites');
 var state = require('./state');
 var time = require('./time');
@@ -15,6 +16,7 @@ var GRAVITY = 30;
 var PLAYER_MASS = 5;
 var PLAYER_DRAG = 0.5;
 var PLAYER_SPEED = 10;
+var FOV_Y = 18;
 
 /*
  * Calculate the interpolated position of a body.
@@ -67,12 +69,20 @@ function Game() {
 		target: this.bbody,
 		targetY: 0,
 	});
+
+	this._bg = new filter.Filter({
+		shader: 'game_bg',
+		uniforms: 'Scale Offset GridSize Color',
+		func: this._bgUniforms,
+		target: this,
+	});
 }
 
 /*
  * Initialize the screen.
  */
 Game.prototype.init = function(r) {
+	this._bg.init(r);
 	this.time = new time.Time(this, r.time);
 	control.game.enable();
 };
@@ -81,6 +91,7 @@ Game.prototype.init = function(r) {
  * Destroy the screen
  */
 Game.prototype.destroy = function(r) {
+	this._bg.destroy(r);
 	control.game.disable();
 };
 
@@ -91,16 +102,13 @@ Game.prototype.render = function(r) {
 	var gl = r.gl;
 	this.time.update(r.time);
 	var frac = this.time.frac;
-	var mvp = this.camera.mvp(frac);
+	this.camera.update(frac);
 
-	gl.viewport(0, 0, r.width, r.height);
-	gl.clearColor(0.0, 0.0, 0.0, 1.0);
-	gl.clear(gl.COLOR_BUFFER_BIT);
-
+	this._bg.render(r);
 	this.sprites.clear();
 	var pos = bodyPos(this.bbody, frac);
 	this.sprites.add({ x: pos[0], y: pos[1], radius: 1.0, color: 0xff007fff });
-	this.sprites.draw(gl, mvp);
+	this.sprites.draw(gl, this.camera.MVP);
 };
 
 /*
@@ -123,6 +131,22 @@ Game.prototype.step = function(dt) {
 	this.bbody.applyForce([fx, fy]);
 	this.world.step(dt);
 	this.camera.step();
+};
+
+/*
+ * Update the uniforms for the background.
+ */
+Game.prototype._bgUniforms = function(r, p) {
+	var gl = r.gl;
+	var fov_y = FOV_Y, fov_x = fov_y * r.aspect;
+	var pos = this.camera.pos;
+	gl.uniform2fv(p.Scale, [fov_x / r.width, fov_y / r.height]);
+	gl.uniform2fv(p.Offset, [pos[0] - fov_x * 0.5, pos[1] - fov_y * 0.5]);
+	gl.uniform1f(p.GridSize, 0.1);
+	gl.uniform4fv(p.Color, [
+		0.2, 0.2, 0.2, 1.0,
+		0.3, 0.4, 0.5, 1.0,
+	]);
 };
 
 // We export through the state module.

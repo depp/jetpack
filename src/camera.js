@@ -169,6 +169,10 @@ function Camera(arg) {
 	this._proj[0] = 2/64;
 	this._proj[5] = 2/36;
 	this._mvp = mat4.create();
+
+	// Public results
+	this.MVP = null;
+	this.pos = vec2.create();
 }
 
 /*
@@ -198,11 +202,11 @@ Camera.prototype.set = function(arg) {
 /*
  * Get the model view projection matrix.
  */
-Camera.prototype.mvp = function(frac) {
-	vec2.lerp(this._translate, this._pos0, this._pos1, frac);
-	vec2.negate(this._translate, this._translate);
+Camera.prototype.update = function(frac) {
+	vec2.lerp(this.pos, this._pos0, this._pos1, frac);
+	vec2.negate(this._translate, this.pos);
 	mat4.translate(this._mvp, this._proj, this._translate);
-	return this._mvp;
+	this.MVP = this._mvp;
 };
 
 module.exports = {
