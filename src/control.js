@@ -34,17 +34,14 @@ var game = makeGroup('game', function(ctl) {
 	});
 
 	return {
-		move: ctl.add2D({
-			name: 'Move',
-			left: 'left a',
-			right: 'right d',
-			up: 'up w',
-			down: 'down s',
+		jet: ctl.addButton({
+			name: 'Jetpack',
+			key: 'q a z space',
 		}),
 
-		jump: ctl.addButton({
-			name: 'Jump',
-			key: 'space',
+		fire: ctl.addButton({
+			name: 'Fire',
+			key: 'w s x',
 		}),
 	};
 });

@@ -10,6 +10,11 @@ var sprites = require('./sprites');
 var state = require('./state');
 var time = require('./time');
 
+var GRAVITY = 30;
+var PLAYER_MASS = 5;
+var PLAYER_DRAG = 0.5;
+var PLAYER_SPEED = 10;
+
 /*
  * Calculate the interpolated position of a body.
  */
@@ -31,12 +36,12 @@ function Game() {
 
 	// Physics engine
 	this.world = new p2.World({
-		gravity: [0, -9.82],
+		gravity: [0, -GRAVITY],
 	});
 
 	// Occupants
 	this.bbody = new p2.Body({
-		mass: 5,
+		mass: PLAYER_MASS,
 		position: [0, 0],
 	});
 	this.bbody.addShape(new p2.Circle({ radius: 1 }));
@@ -97,12 +102,17 @@ Game.prototype.render = function(curTime, gl, width, height, aspect) {
 Game.prototype.step = function(dt) {
 	var ctl = control.game;
 	ctl.update();
-	if (ctl.jump.press) {
-		console.log('JUMP');
-		this.bbody.applyImpulse([0, 50]);
+	var vx = this.bbody.velocity[0], vy = this.bbody.velocity[1];
+	var vmag2 = vx * vx + vy * vy;
+	var fdrag = vmag2 * PLAYER_DRAG;
+	var a = vmag2 > 1e-3 ? 1.0 / Math.sqrt(vmag2) : 0;
+	var fx = -fdrag * a * vx, fy = -fdrag * a * vy;
+	if (ctl.jet.state) {
+		fy += PLAYER_MASS * GRAVITY * 2;
 	}
-	var move = ctl.move.value;
-	this.bbody.applyForce([move[0] * 50, move[1] * 50]);
+	fx += PLAYER_SPEED * PLAYER_SPEED * PLAYER_DRAG;
+	console.log(fx, fy);
+	this.bbody.applyForce([fx, fy]);
 	this.world.step(dt);
 };
 
