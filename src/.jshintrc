@@ -1,0 +1,5 @@
+{
+    "browserify": true,
+    "devel": true,
+    "predef": ["p2", "_"]
+}
