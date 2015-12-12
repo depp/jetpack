@@ -20,4 +20,23 @@ module.exports = {
 		// Filter constant for filter stages
 		FilterTime: 0.001,
 	},
+
+	// Game parameters
+	Game: {
+		// Gravity acceleration
+		Gravity: 50,
+		// Distance to lead the player by, at full velocity
+		Leading: 2,
+		// Player properties
+		Player: {
+			// Player mass
+			Mass: 5,
+			// Air drag coefficient (must not be zero, or max speed is infinite)
+			Drag: 0.5,
+			// Maximum forward speed
+			Speed: 25,
+			// Jetpack acceleration
+			Jetpack: 100,
+		},
+	},
 };

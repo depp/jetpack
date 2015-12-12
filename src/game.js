@@ -8,15 +8,12 @@
 var camera = require('./camera');
 var control = require('./control');
 var filter = require('./filter');
+var param = require('./param');
 var sprites = require('./sprites');
 var state = require('./state');
 var time = require('./time');
 
-var GRAVITY = 50;
-var PLAYER_MASS = 5;
-var PLAYER_DRAG = 0.5;
-var PLAYER_SPEED = 25;
-var FOV_Y = 18;
+var FovY = 18;
 
 /*
  * Calculate the interpolated position of a body.
@@ -31,6 +28,8 @@ function bodyPos(body, frac) {
  * Main game screen.
  */
 function Game() {
+	var g = param.Game;
+
 	// Timing manager
 	this.time = null;
 
@@ -39,12 +38,12 @@ function Game() {
 
 	// Physics engine
 	this.world = new p2.World({
-		gravity: [0, -GRAVITY],
+		gravity: [0, -g.Gravity],
 	});
 
 	// Occupants
 	this.bbody = new p2.Body({
-		mass: PLAYER_MASS,
+		mass: g.Player.Mass,
 		position: [0, 0],
 	});
 	this.bbody.addShape(new p2.Circle({ radius: 1 }));
@@ -68,6 +67,7 @@ function Game() {
 	this.camera = new camera.Camera({
 		target: this.bbody,
 		targetY: 0,
+		leading: g.Leading / g.Player.Speed,
 	});
 
 	this._bg = new filter.Filter({
@@ -76,6 +76,10 @@ function Game() {
 		func: this._bgUniforms,
 		target: this,
 	});
+
+	this._drag = g.Player.Drag;
+	this._jetForceUp = g.Player.Mass * g.Player.Jetpack;
+	this._jetForceForward = g.Player.Speed * g.Player.Speed * g.Player.Drag;
 }
 
 /*
@@ -121,13 +125,13 @@ Game.prototype.step = function(dt) {
 	ctl.update();
 	var vx = this.bbody.velocity[0], vy = this.bbody.velocity[1];
 	var vmag2 = vx * vx + vy * vy;
-	var fdrag = vmag2 * PLAYER_DRAG;
+	var fdrag = vmag2 * this._drag;
 	var a = vmag2 > 1e-3 ? 1.0 / Math.sqrt(vmag2) : 0;
 	var fx = -fdrag * a * vx, fy = -fdrag * a * vy;
 	if (ctl.jet.state) {
-		fy += PLAYER_MASS * GRAVITY * 2;
+		fy += this._jetForceUp;
 	}
-	fx += PLAYER_SPEED * PLAYER_SPEED * PLAYER_DRAG;
+	fx += this._jetForceForward;
 	this.bbody.applyForce([fx, fy]);
 	this.world.step(dt);
 	this.camera.step();
@@ -138,7 +142,7 @@ Game.prototype.step = function(dt) {
  */
 Game.prototype._bgUniforms = function(r, p) {
 	var gl = r.gl;
-	var fov_y = FOV_Y, fov_x = fov_y * r.aspect;
+	var fov_y = FovY, fov_x = fov_y * r.aspect;
 	var pos = this.camera.pos;
 	gl.uniform4fv(p.Xform, [
 		fov_x / r.width, fov_y / r.height,
