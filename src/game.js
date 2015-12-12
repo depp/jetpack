@@ -72,7 +72,7 @@ function Game() {
 
 	this._bg = new filter.Filter({
 		shader: 'game_bg',
-		uniforms: 'Scale Offset GridSize Color',
+		uniforms: 'Xform Grid Color',
 		func: this._bgUniforms,
 		target: this,
 	});
@@ -140,9 +140,13 @@ Game.prototype._bgUniforms = function(r, p) {
 	var gl = r.gl;
 	var fov_y = FOV_Y, fov_x = fov_y * r.aspect;
 	var pos = this.camera.pos;
-	gl.uniform2fv(p.Scale, [fov_x / r.width, fov_y / r.height]);
-	gl.uniform2fv(p.Offset, [pos[0] - fov_x * 0.5, pos[1] - fov_y * 0.5]);
-	gl.uniform1f(p.GridSize, 0.1);
+	gl.uniform4fv(p.Xform, [
+		fov_x / r.width, fov_y / r.height,
+		pos[0] - fov_x * 0.5, pos[1] - fov_y * 0.5,
+	]);
+	gl.uniform2fv(p.Grid, [
+		0.1, 1 / 2,
+	]);
 	gl.uniform4fv(p.Color, [
 		0.2, 0.2, 0.2, 1.0,
 		0.3, 0.4, 0.5, 1.0,
