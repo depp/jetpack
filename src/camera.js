@@ -115,10 +115,10 @@ Tracker.prototype.update = function() {
 function Filter(order, time) {
 	this.order = order;
 	this.data = new Float64Array(order * 2);
-	this.coeff = Math.pow(time, 1 / param.RATE);
+	this.coeff = Math.pow(time, 1 / param.Rate);
 	this.pos = new Float64Array(2);
 	// Extra leading needed to compensate for the filter
-	this.leading = this.order * this.coeff / ((1 - this.coeff) * param.RATE);
+	this.leading = this.order * this.coeff / ((1 - this.coeff) * param.Rate);
 }
 
 /*
@@ -166,13 +166,13 @@ Filter.prototype.update = function(inPos) {
  * arg.offsetY: Y offset from tracked targets
  */
 function Camera(arg) {
-	var p = param.CAMERA;
+	var p = param.Camera;
 	// How much to lead the objects
 	this._leading = 0;
 	// Object tracking
 	this._track = new Tracker();
 	// Position filter
-	this._filter = new Filter(p.FILTER_ORDER, p.FILTER_TIME);
+	this._filter = new Filter(p.FilterOrder, p.FilterTime);
 	// Position interpolation, previous and current frame
 	this._pos0 = vec2.create();
 	this._pos1 = vec2.create();

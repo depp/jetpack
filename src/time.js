@@ -22,9 +22,9 @@ function Time(target, curTime) {
 	this._target = target;
 
 	// Target update frequency, in Hz
-	this._rate = param.RATE;
+	this._rate = param.Rate;
 	// Target update interval, in s
-	this._dt = 1.0 / param.RATE;
+	this._dt = 1.0 / param.Rate;
 	// Target update interval, in ms
 	this._dtMsec = 1e3 * this._dt;
 
@@ -49,7 +49,7 @@ Time.prototype.update = function(curTime) {
 
 	if (curTime >= this._step1) {
 		// At least one update
-		if (curTime > lastTime + param.MAX_UPDATE_INTERVAL * 1e3) {
+		if (curTime > lastTime + param.MaxUpdateInterval * 1e3) {
 			// Too much time since last call, skip missing time
 			console.warn('Lag');
 			this._step(curTime);
