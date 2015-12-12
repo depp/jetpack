@@ -18,6 +18,7 @@ var state = require('./state');
 function Load() {
 	this.bgProg = null;
 	this.vbuf = null;
+	this.startTime = -1;
 }
 
 /*
@@ -38,17 +39,29 @@ Load.prototype.init = function(curTime, gl) {
 	gl.bindBuffer(gl.ARRAY_BUFFER, this.vbuf);
 	gl.bufferData(gl.ARRAY_BUFFER, vdata, gl.STATIC_DRAW);
 	gl.bindBuffer(gl.ARRAY_BUFFER, null);
+	this.startTime = curTime;
 };
 
 /*
  * Destroy the screen.
  */
-Load.prototype.deactivate = function(gl) {};
+Load.prototype.destroy = function(gl) {
+	if (this.bgProg) {
+		gl.deleteProgram(this.bgProg.program);
+	}
+	if (this.vbuf) {
+		gl.deleteBuffer(this.vbuf);
+	}
+};
 
 /*
  * Render the loading screen.
  */
 Load.prototype.render = function(curTime, gl, width, height, aspect) {
+	if (curTime >= this.startTime + 3000) {
+		state.set(new state.Game());
+	}
+
 	gl.viewport(0, 0, width, height);
 
 	var p = this.bgProg;
