@@ -12,10 +12,10 @@ var sprites = require('./sprites');
 var state = require('./state');
 var time = require('./time');
 
-var GRAVITY = 30;
+var GRAVITY = 50;
 var PLAYER_MASS = 5;
 var PLAYER_DRAG = 0.5;
-var PLAYER_SPEED = 10;
+var PLAYER_SPEED = 25;
 var FOV_Y = 18;
 
 /*
