@@ -118,6 +118,8 @@ Sprites.prototype.draw = function(gl) {
  * Add sprites to the sprite layer.
  * arg.x: X coordinate
  * arg.y: Y coordinate
+ * arg.radius: Radius
+ * arg.color: Color to use
  */
 Sprites.prototype.add = function() {
 	var i;
@@ -143,9 +145,16 @@ Sprites.prototype.add = function() {
 	}
 
 	for (i = 0; i < arguments.length; i++) {
-		var x = arguments[i].x, y = arguments[i].y;
-		var x0 = x - 1, x1 = x + 1, y0 = y - 1, y1 = y + 1;
-		var color = 0x3399ccff;
+		var arg = arguments[i];
+		var r = arg.radius;
+		var x = arg.x, y = arg.y;
+		var x0 = x - r, x1 = x + r, y0 = y - r, y1 = y + r;
+		var color = arg.color | 0;
+		color =
+			((color >> 24) & 0x000000ff) |
+			((color >>  8) & 0x0000ff00) |
+			((color <<  8) & 0x00ff0000) |
+			((color << 24) & 0xff000000);
 		this.vdata_pos.set([x0, y0, x1, y0, x0, y1, x1, y1], i * 8);
 		this.vdata_color.set([color, color, color, color], i * 4);
 	}

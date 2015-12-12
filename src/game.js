@@ -85,7 +85,7 @@ Game.prototype.render = function(curTime, gl, width, height, aspect) {
 
 	this.sprites.clear();
 	var pos = bodyPos(this.bbody, frac);
-	this.sprites.add({ x: pos[0], y: pos[1] });
+	this.sprites.add({ x: pos[0], y: pos[1], radius: 1.0, color: 0xff007fff });
 	this.sprites.draw(gl);
 };
 
