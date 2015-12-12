@@ -8,12 +8,16 @@
 module.exports = {
 	// Physics update rate, in Hz.
 	Rate: 30,
+
 	// Maximum update interval, in s.  If this much time passes without
 	// an update, the game temporarily pauses.
 	MaxUpdateInterval: 0.5,
 
+	// Game camera parameters
 	Camera: {
+		// Number of filter stages for camera smoothing
 		FilterOrder: 3,
+		// Filter constant for filter stages
 		FilterTime: 0.001,
 	},
 };
