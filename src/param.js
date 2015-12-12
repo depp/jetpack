@@ -24,7 +24,7 @@ module.exports = {
 	// Game parameters
 	Game: {
 		// Gravity acceleration
-		Gravity: 50,
+		Gravity: 75,
 		// Distance to lead the player by, at full velocity
 		Leading: 2,
 		// Player properties
@@ -36,7 +36,7 @@ module.exports = {
 			// Maximum forward speed
 			Speed: 25,
 			// Jetpack acceleration
-			Jetpack: 100,
+			Jetpack: 150,
 		},
 	},
 };
