@@ -36,10 +36,13 @@ function Player() {
  */
 Player.prototype.addToWorld = function(world, offset) {
 	var g = param.Game;
+	var pos = [offset[0], offset[1]];
+	var vel = [0, 0];
 	this.body = new p2.Body({
 		mass: g.Mass,
-		position: offset,
+		position: pos,
 		fixedRotation: true,
+		velocity: vel,
 	});
 	var shape = new p2.Circle({ radius: 1 });
 	shape.material = physics.Material.Player;

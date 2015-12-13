@@ -148,6 +148,7 @@ function Segment(x0) {
 	var level = param.Level;
 	var y1 = level.MaxGap * 0.5, y0 = -y1;
 	this.x0 = x0;
+	this.x1 = x0;
 	this.floor = { x: x0, y: y0, items: [] };
 	this.ceiling = { x: x0, y: y1, items: [] };
 	this.colors = null;
@@ -175,25 +176,19 @@ Segment.prototype.addBorder = function(y, x1, isCeiling, isBuffer) {
 	}
 	b.x = x1;
 	b.y = y;
+	this.x1 = Math.max(x1, this.x1);
 };
 
 /*
- * Extend borders to the given X position.  If not specified, builds
- * the borders so they line up.
- *
- * Returns the final X position.
+ * Extend borders to the given X position.
  */
 Segment.prototype.extendBorders = function(x) {
-	if (typeof x == 'undefined') {
-		x = Math.max(this.floor.x, this.ceiling.x);
-	}
 	if (this.floor.x < x) {
 		this.addBorder(this.floor.y, x, false);
 	}
 	if (this.ceiling.x < x) {
 		this.addBorder(this.ceiling.y, x, true);
 	}
-	return x;
 };
 
 /*
@@ -203,7 +198,8 @@ Segment.prototype.addVaryingBorders = function() {
 	var level = param.Level;
 	var r;
 
-	var x = this.extendBorders();
+	var x = this.x1;
+	this.extendBorders(x);
 	// Ways to vary the floor and ceiling
 	var SHRINK = 0, GROW = 1, MOVE_UP = 2, MOVE_DOWN = 3;
 	// Range of gaps
@@ -473,7 +469,7 @@ Segment.prototype.emit = function(game) {
 	color = this.colors.Ceiling;
 	_.forEach(this.ceiling.items, function(it) { it.emitTiles(tiles, color); });
 
-	var x0 = this.x0, x1 = this.extendBorders();
+	var x0 = this.x0, x1 = this.x1;
 	var arr0 = getHeightArray(this.floor.items, x0, x1);
 	var arr1 = getHeightArray(this.ceiling.items, x0, x1);
 	erodeArray(arr0);
@@ -494,11 +490,13 @@ Segment.prototype.emit = function(game) {
  * Create a random level segment.
  */
 function makeSegment(game, type) {
-	var bufW = param.Level.BufferWidth, x = -bufW;
+	var bufW = param.Level.BufferWidth, x = -128;
 	var seg = new Segment(x);
+	var y0 = seg.floor.y, y1 = seg.ceiling.y;
+	var buffers = [{ y0: y0, y1: y1, x0: x, x1: x + bufW }];
 	x += bufW;
-	seg.addBorder(seg.floor.y, x, false, true);
-	seg.addBorder(seg.ceiling.y, x, true, true);
+	seg.addBorder(y0, x, false, true);
+	seg.addBorder(y1, x, true, true);
 
 	var levelW = util.randInt(150, 225) * 2;
 	switch (type) {
@@ -527,13 +525,17 @@ function makeSegment(game, type) {
 		break;
 	}
 
-	x = seg.extendBorders();
-	var y0 = seg.floor.y, y1 = y0 + param.Level.MaxGap;
+	y0 = seg.floor.y;
+	y1 = y0 + param.Level.MaxGap;
+	x = seg.x1;
+	seg.extendBorders(x);
+	buffers.push({ y0: y0, y1: y1, x0: x, x1: x + bufW });
 	x += bufW;
 	seg.addBorder(y0, x, false, true);
 	seg.addBorder(y1, x, true, true);
 
 	seg.emit(game);
+	game.buffers = buffers;
 }
 
 module.exports = {

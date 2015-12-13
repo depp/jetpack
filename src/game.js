@@ -57,7 +57,7 @@ function Game() {
 		leading: g.Leading / g.Speed,
 		offsetX: 20,
 	});
-	this.buffers = [null, null];
+	this.buffers = null;
 }
 
 /*
@@ -117,19 +117,23 @@ Game.prototype.step = function(dt) {
  * Transition to the next segment.
  */
 Game.prototype.nextSegment = function(isFirst) {
-	var offset;
-	this.world = physics.createWorld();
-	segment.makeSegment(this, 2);
+	var offset, b;
 	if (isFirst) {
 		this.player = new player.Player();
 		offset = [0, -param.Level.MaxGap * 0.5 + 1];
 	} else {
-
+		b = this.buffers[1];
+		offset = [-0.5 * (b.x0 + b.x1), -0.5 * (b.y0 + b.y1)];
 	}
+	this.world = physics.createWorld();
+	segment.makeSegment(this, 2);
+	b = this.buffers[0];
+	offset[0] += 0.5 * (b.x0 + b.x1);
+	offset[1] += 0.5 * (b.y0 + b.y1);
 	this.player.addToWorld(this.world, offset);
-	physics.settle(this.world, 1 / param.Rate, 3.0);
 	this.camera.set({ target: this.player.body });
 	if (isFirst) {
+		physics.settle(this.world, 1 / param.Rate, 3.0);
 		this.camera.reset();
 	}
 };
