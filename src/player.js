@@ -22,6 +22,7 @@ function Player() {
 	this._drag = g.Drag;
 	this._jetForceUp = g.Mass * g.Jetpack;
 	this._jetForceForward = g.Speed * g.Speed * g.Drag;
+	this._isFlying = false;
 }
 
 /*
@@ -69,6 +70,7 @@ Player.prototype.step = function(game) {
 		fy += this._jetForceUp;
 	}
 	var grounded = physics.isGrounded(game.world, this.body);
+	this._isFlying = !grounded;
 	if (!grounded) {
 		fx += this._jetForceForward;
 	}
@@ -85,7 +87,7 @@ Player.prototype.emit = function(game, frac) {
 		y: pos[1],
 		radius: 1.5,
 		color: PlayerColorU32,
-		sprite: 'PStand',
+		sprite: this._isFlying ? 'PForward' : 'PStand',
 	});
 	game.lights.addLocal({
 		color: PlayerColor,
