@@ -37,11 +37,13 @@ module.exports = {
 			// Player mass
 			Mass: 5,
 			// Air drag coefficient (must not be zero, or max speed is infinite)
-			Drag: 0.5,
+			Drag: 0.1,
 			// Maximum forward speed
 			Speed: 50,
 			// Jetpack acceleration
 			Jetpack: 150,
+			// Friction coefficient
+			Friction: 0.5,
 		},
 		// Maximum angle, in degrees, which is considered "ground"
 		GroundAngle: 30,
