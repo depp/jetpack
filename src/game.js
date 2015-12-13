@@ -49,7 +49,7 @@ function Game() {
 	// Camera
 	this.camera = new camera.Camera({
 		target: this.player.body,
-		targetY: 0,
+		// targetY: 0,
 		leading: g.Leading / g.Speed,
 	});
 }

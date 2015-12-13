@@ -46,9 +46,11 @@ module.exports = {
 
 	// Level generation
 	Level: {
-		// Maximum height of the level
-		Height: 32,
+		// Maximum gap between floor and ceiling
+		MaxGap: 32,
+		// Minimum gap between floor and ceiling
+		MinGap: 12,
 		// Width of buffer between segments
-		Buffer: 64,
+		BufferWidth: 64,
 	},
 };
