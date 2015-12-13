@@ -15,7 +15,7 @@ var Material = {
  */
 var Contact = [
 	new p2.ContactMaterial(Material.Player, Material.World, {
-		friction: 10.0,
+		friction: 0.1,
 	}),
 ];
 

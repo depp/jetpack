@@ -48,6 +48,7 @@ function Game() {
 	this.bbody = new p2.Body({
 		mass: g.Player.Mass,
 		position: [0, 0],
+		fixedRotation: true,
 	});
 	shape = new p2.Circle({ radius: 1 });
 	shape.material = physics.Material.Player;
