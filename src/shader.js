@@ -66,7 +66,7 @@ function loadProgram(gl, p) {
 	gl.linkProgram(program);
 	if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
 		console.log('Errors for program: ', p.name);
-		console.log(gl.getProgramINfoLog(program));
+		console.log(gl.getProgramInfoLog(program));
 		gl.deleteProgram(program);
 		return null;
 	}

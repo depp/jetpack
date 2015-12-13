@@ -14,8 +14,10 @@ var control = require('./control');
 var param = require('./param');
 var physics = require('./physics');
 var player = require('./player');
+var segment = require('./segment');
 var sprites = require('./sprites');
 var state = require('./state');
+var tiles = require('./tiles');
 var time = require('./time');
 
 /*
@@ -30,12 +32,15 @@ function Game() {
 	// Graphics layers
 	this.background = new background.Background();
 	this.background.setGrid();
+	this.tiles = new tiles.Tiles();
 	this.sprites = new sprites.Sprites();
 
 	// Physics engine
 	this.world = physics.createWorld();
 
 	// Occupants
+	this.segment = new segment.Segment();
+	this.segment.activate(this);
 	this.player = new player.Player();
 	this.world.addBody(this.player.body);
 
@@ -73,6 +78,7 @@ function Game() {
  */
 Game.prototype.init = function(r) {
 	this.background.init(r);
+	this.tiles.init(r);
 	this.sprites.init(r);
 	control.game.enable();
 };
@@ -82,6 +88,8 @@ Game.prototype.init = function(r) {
  */
 Game.prototype.destroy = function(r) {
 	this.background.destroy(r);
+	this.tiles.destroy();
+	this.sprites.destroy();
 	control.game.disable();
 };
 
@@ -96,6 +104,7 @@ Game.prototype.render = function(r) {
 	this.sprites.clear();
 	this.player.emit(this, frac);
 	this.background.render(r, this.camera);
+	this.tiles.render(r, this.camera);
 	this.sprites.render(r, this.camera);
 };
 
