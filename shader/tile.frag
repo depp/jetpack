@@ -28,5 +28,5 @@ void main() {
         light += LightColor[i].rgb * intensity *
             lightMag(norm, normalize(lvec));
     }
-    gl_FragColor = vec4(light, 1.0);
+    gl_FragColor = vec4(light * mix(vColor.rgb, vec3(1.0), c), 1.0);
 }
