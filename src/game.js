@@ -62,6 +62,7 @@ function Game() {
 	this.camera = new camera.Camera({
 		target: this.player.body,
 		leading: g.Leading / g.Speed,
+		offsetX: 20,
 	});
 
 	this.segment.emit(this);
