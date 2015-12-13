@@ -8,6 +8,7 @@ uniform sampler2D TexColor;
 uniform sampler2D TexNormal;
 uniform vec4 LightColor[8];
 uniform vec4 LightPosition[8];
+uniform vec3 BlockColor;
 
 float lightMag(in vec3 norm, in vec3 light) {
     return dot(norm, light);
@@ -28,5 +29,5 @@ void main() {
         light += LightColor[i].rgb * intensity *
             lightMag(norm, normalize(lvec));
     }
-    gl_FragColor = vec4(light * mix(vColor.rgb, vec3(1.0), c), 1.0);
+    gl_FragColor = vec4(light * mix(vColor.rgb, BlockColor, c), 1.0);
 }

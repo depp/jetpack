@@ -46,7 +46,7 @@ Tiles.prototype.init = function(r) {
 		vert: 'tile.vert',
 		frag: 'tile.frag',
 		attributes: 'Pos Normal Color',
-		uniforms: 'MVP TexColor TexNormal LightColor LightPosition',
+		uniforms: 'MVP TexColor TexNormal LightColor LightPosition BlockColor',
 	});
 
 	var img;
@@ -136,6 +136,7 @@ Tiles.prototype.render = function(r, camera, lights) {
 	gl.uniform1i(this.program.TexNormal, 1);
 	gl.uniform4fv(this.program.LightColor, lights.colors);
 	gl.uniform4fv(this.program.LightPosition, lights.locs);
+	gl.uniform3fv(this.program.BlockColor, [0.6, 0.6, 0.6]);
 	gl.bindBuffer(gl.ARRAY_BUFFER, this.vbuffer);
 	gl.enableVertexAttribArray(0);
 	gl.vertexAttribPointer(0, 2, gl.FLOAT, false, ATotal, APos);
