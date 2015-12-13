@@ -39,7 +39,7 @@ module.exports = {
 			// Air drag coefficient (must not be zero, or max speed is infinite)
 			Drag: 0.5,
 			// Maximum forward speed
-			Speed: 25,
+			Speed: 50,
 			// Jetpack acceleration
 			Jetpack: 150,
 		},
