@@ -140,6 +140,7 @@ Game.prototype.nextSegment = function(isFirst) {
 		physics.settle(this.world, 1 / param.Rate, 3.0);
 		this.camera.reset();
 	} else {
+		this.background.addOffset(offset);
 		this.camera.addOffset(offset);
 	}
 };
