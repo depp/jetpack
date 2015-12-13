@@ -6,6 +6,7 @@
 'use strict';
 
 var shader = require('./shader');
+var util = require('./util');
 
 /*
  * Sprite layer.
@@ -90,16 +91,11 @@ Sprites.prototype.render = function(r, camera) {
 		if (!this.ibuffer) {
 			this.ibuffer = gl.createBuffer();
 		}
-		var capacity = this.capacity;
-		var idata = new Uint16Array(capacity * 6);
-		for (i = 0; i < capacity; i++) {
-			idata.set([
-				i*4+0, i*4+1, i*4+2,
-				i*4+2, i*4+1, i*4+3,
-			], i * 6);
-		}
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.ibuffer);
-		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, idata, gl.STATIC_DRAW);
+		gl.bufferData(
+			gl.ELEMENT_ARRAY_BUFFER,
+			util.genIndexArray(this.capacity),
+			gl.STATIC_DRAW);
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 		this.idirty = false;
 	}
