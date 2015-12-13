@@ -25,7 +25,7 @@ function Game() {
 	var g = param.Game;
 
 	// Timing manager
-	this.time = null;
+	this.time = new time.Time(this);
 
 	// Sprite layer
 	this.sprites = new sprites.Sprites();
@@ -74,7 +74,6 @@ function Game() {
  */
 Game.prototype.init = function(r) {
 	this.background.init(r);
-	this.time = new time.Time(this, r.time);
 	control.game.enable();
 };
 

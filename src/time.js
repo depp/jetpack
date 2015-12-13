@@ -17,7 +17,7 @@ var param = require('./param');
  * target: An object with a 'step' method, which is passed the
  * timestep
  */
-function Time(target, curTime) {
+function Time(target) {
 	// The object to periodically update
 	this._target = target;
 
@@ -29,13 +29,18 @@ function Time(target, curTime) {
 	this._dtMsec = 1e3 * this._dt;
 
 	// Previous update timestamp
-	this._step0 = curTime;
+	this._step0 = -1;
 	// Next update timestamp
-	this._step1 = curTime - 1;
+	this._step1 = -1;
 	// Last update timestamp
-	this._lastTime = curTime;
+	this._lastTime = -1;
 	// The current fractional position between updates, in the range 0-1
 	this.frac = 0;
+
+	// Frame count as of last step
+	this.frame = 0;
+	// The total elapsed time
+	this.elapsed = 0;
 }
 
 /*
@@ -46,32 +51,41 @@ function Time(target, curTime) {
 Time.prototype.update = function(curTime) {
 	var lastTime = this._lastTime;
 	this._lastTime = curTime;
+	if (this._step1 < 0) {
+		this._step(curTime);
+		this.frac = 0;
+		this.elapsed = 0;
+		return;
+	}
 
 	if (curTime >= this._step1) {
 		// At least one update
 		if (curTime > lastTime + param.MaxUpdateInterval * 1e3) {
 			// Too much time since last call, skip missing time
 			console.warn('Lag');
+			this._target.step(this._dt);
 			this._step(curTime);
 			this.frac = 0;
+			this.elapsed = this._frame * this._dt;
 			return;
 		}
 		do {
+			this._target.step(this._dt);
 			this._step(this._step1);
 		} while (curTime >= this._step1);
 	}
 
 	var frac = (curTime - this._step0) / (this._step1 - this._step0);
 	this.frac = Math.max(0, Math.min(1, frac));
+	this.elapsed = (this._frame + this.frac) * this._dt;
 };
 
 /*
- * Advance the simulation by one frame.
+ * Advance the timing by one frame.
  *
  * time: The time at which the update takes place, in ms
  */
 Time.prototype._step = function(stepTime) {
-	this._target.step(this._dt);
 	this._step0 = stepTime;
 	this._step1 = stepTime + this._dt * 1e3;
 };
