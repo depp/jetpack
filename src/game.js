@@ -12,11 +12,13 @@ var camera = require('./camera');
 var control = require('./control');
 var filter = require('./filter');
 var param = require('./param');
+var physics = require('./physics');
 var sprites = require('./sprites');
 var state = require('./state');
 var time = require('./time');
 
 var FovY = 18;
+
 
 /*
  * Calculate the interpolated position of a body.
@@ -62,7 +64,7 @@ function settle(world, dt, maxTime) {
 		world.step(dt);
 	}
 	if (iter >= maxIter) {
-		console.log('Could not settle simulation, awake:', numAwake);
+		console.warn('Could not settle simulation, awake:', numAwake);
 	} else {
 		// console.log('Settling time: ', iter * dt);
 	}
@@ -87,30 +89,35 @@ function Game() {
 	this.sprites = new sprites.Sprites();
 
 	// Physics engine
-	this.world = new p2.World({
-		gravity: [0, -g.Gravity],
-	});
+	this.world = physics.createWorld();
 
 	// Occupants
+	var shape;
 	this.bbody = new p2.Body({
 		mass: g.Player.Mass,
 		position: [0, 0],
 	});
-	this.bbody.addShape(new p2.Circle({ radius: 1 }));
+	shape = new p2.Circle({ radius: 1 });
+	shape.material = physics.Material.Player;
+	this.bbody.addShape(shape);
 	this.world.addBody(this.bbody);
 
 	this.plane0 = new p2.Body({
 		mass: 0,
 		position: [0, -16],
 	});
-	this.plane0.addShape(new p2.Plane());
+	shape = new p2.Plane();
+	shape.material = physics.Material.World;
+	this.plane0.addShape(shape);
 	this.world.addBody(this.plane0);
 	this.plane1 = new p2.Body({
 		mass: 0,
 		position: [0, 16],
 		angle: Math.PI,
 	});
-	this.plane1.addShape(new p2.Plane());
+	shape = new p2.Plane();
+	shape.material = physics.Material.World;
+	this.plane1.addShape(shape);
 	this.world.addBody(this.plane1);
 
 	settle(this.world, 1 / param.Rate, 3.0);
