@@ -37,7 +37,18 @@ function rgb(r, g, b) {
 	return 0xff000000 | (u8(b) << 16) | (u8(g) <<  8) | u8(r);
 }
 
+/*
+ * Convert hex to the a packed RGB value.
+ */
+function hex(x) {
+	return 0xff000000 |
+		((x << 16) & 0x00ff0000) |
+		(x & 0x0000ff00) |
+		((x >> 16) & 0x000000ff);
+}
+
 module.exports = {
 	rgba: rgba,
 	rgb: rgb,
+	hex: hex,
 };

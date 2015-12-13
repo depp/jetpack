@@ -6,6 +6,7 @@
 'use strict';
 
 var color = require('./color');
+var enemy = require('./enemy');
 var param = require('./param');
 var physics = require('./physics');
 var util = require('./util');
@@ -490,6 +491,7 @@ Segment.prototype.emit = function(game) {
  * Create a random level segment.
  */
 function makeSegment(game, type) {
+	var enemies = new enemy.Enemies();
 	var bufW = param.Level.BufferWidth, x = -128;
 	var seg = new Segment(x);
 	var y0 = seg.floor.y, y1 = seg.ceiling.y;
@@ -500,12 +502,20 @@ function makeSegment(game, type) {
 
 	var levelW = util.randInt(150, 225) * 2;
 	levelW = 100;
+	type = 0;
 	switch (type) {
 	default:
 	case 0:
 		// "Open style" / green - no obstacles, or almost none
 		seg.colors = Colors.Open;
 		seg.extendBorders(x + levelW);
+		for (var i = 0; i < enemy.Types.length; i++) {
+			enemies.spawn({
+				x: x - i * 3,
+				y: 5,
+				type: enemy.Types[i],
+			});
+		}
 		break;
 
 	case 1:
@@ -537,6 +547,7 @@ function makeSegment(game, type) {
 
 	seg.emit(game);
 	game.buffers = buffers;
+	game.enemies = enemies;
 }
 
 module.exports = {

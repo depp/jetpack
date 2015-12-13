@@ -20,6 +20,7 @@ var sprites = require('./sprites');
 var state = require('./state');
 var tiles = require('./tiles');
 var time = require('./time');
+var util = require('./util');
 
 /*
  * Main game screen.
@@ -58,6 +59,7 @@ function Game() {
 		offsetX: 20,
 	});
 	this.buffers = null;
+	this.enemies = null;
 }
 
 /*
@@ -91,6 +93,7 @@ Game.prototype.render = function(r) {
 	this.sprites.clear();
 	this.lights.clearLocal();
 	this.player.emit(this, frac);
+	this.enemies.emit(this, frac);
 	this.lights.update(this.camera);
 
 	this.background.render(r, this.camera);
@@ -113,6 +116,7 @@ Game.prototype.step = function(dt) {
 	}
 	control.game.update();
 	this.player.step(this);
+	this.enemies.step(this);
 	this.world.step(dt);
 	this.camera.step();
 };
@@ -130,7 +134,7 @@ Game.prototype.nextSegment = function(isFirst) {
 		offset = [-b[0], -b[1]];
 	}
 	this.world = physics.createWorld();
-	segment.makeSegment(this, 2);
+	segment.makeSegment(this, util.randInt(0, 2));
 	b = this.buffers[0];
 	offset[0] += b[0];
 	offset[1] += b[1];
