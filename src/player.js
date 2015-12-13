@@ -10,6 +10,9 @@ var control = require('./control');
 var param = require('./param');
 var physics = require('./physics');
 
+var PlayerColor = [1, 0, 0.5];
+var PlayerColorU32 = color.rgb.apply(null, PlayerColor);
+
 /*
  * Player object.
  */
@@ -58,8 +61,14 @@ Player.prototype.emit = function(game, frac) {
 		x: pos[0],
 		y: pos[1],
 		radius: 1.5,
-		color: color.rgb(1, 0, 0.5),
+		color: PlayerColorU32,
 		sprite: 'PStand',
+	});
+	game.lights.addLocal({
+		color: PlayerColor,
+		intensity: 20,
+		position: pos,
+		height: 2,
 	});
 };
 

@@ -11,6 +11,7 @@ var vec2 = glm.vec2;
 var background = require('./background');
 var camera = require('./camera');
 var control = require('./control');
+var lights = require('./lights');
 var param = require('./param');
 var physics = require('./physics');
 var player = require('./player');
@@ -34,6 +35,20 @@ function Game() {
 	this.background.setGrid();
 	this.tiles = new tiles.Tiles();
 	this.sprites = new sprites.Sprites();
+	this.lights = new lights.Lights();
+	this.lights.addGlobal([{
+		color: [1.0, 0.9, 0.2],
+		intensity: 0.3,
+		direction: [1, 5, 5],
+	}, {
+		color: [0.4, 0.3, 1.0],
+		intensity: 0.2,
+		direction: [-7, -4, +10],
+	}, {
+		color: [0.3, 0.5, 0.9],
+		intensity: 0.2,
+		direction: [7, -4, +8],
+	}]);
 
 	// Physics engine
 	this.world = physics.createWorld();
@@ -82,9 +97,12 @@ Game.prototype.render = function(r) {
 	var frac = this.time.frac;
 	this.camera.update(r, frac);
 	this.sprites.clear();
+	this.lights.clearLocal();
 	this.player.emit(this, frac);
+	this.lights.update(this.camera);
+
 	this.background.render(r, this.camera);
-	this.tiles.render(r, this.camera);
+	this.tiles.render(r, this.camera, this.lights);
 	this.sprites.render(r, this.camera);
 };
 
