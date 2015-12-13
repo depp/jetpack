@@ -493,7 +493,7 @@ Segment.prototype.emit = function(game) {
 /*
  * Create a random level segment.
  */
-function makeSegment(type) {
+function makeSegment(game, type) {
 	var bufW = param.Level.BufferWidth, x = -bufW;
 	var seg = new Segment(x);
 	x += bufW;
@@ -532,7 +532,8 @@ function makeSegment(type) {
 	x += bufW;
 	seg.addBorder(y0, x, false, true);
 	seg.addBorder(y1, x, true, true);
-	return seg;
+
+	seg.emit(game);
 }
 
 module.exports = {

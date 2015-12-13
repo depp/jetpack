@@ -50,23 +50,14 @@ function Game() {
 		direction: [7, -4, +8],
 	}]);
 
-	// Physics engine
-	this.world = physics.createWorld();
-
-	// Occupants
-	this.segment = segment.makeSegment(2);
-	this.player = new player.Player();
-	this.world.addBody(this.player.body);
-
-	// Camera
+	// Physics engine and entities
+	this.world = null;
+	this.player = null;
 	this.camera = new camera.Camera({
-		target: this.player.body,
 		leading: g.Leading / g.Speed,
 		offsetX: 20,
 	});
-
-	this.segment.emit(this);
-	physics.settle(this.world, 1 / param.Rate, 3.0);
+	this.buffers = [null, null];
 }
 
 /*
@@ -93,6 +84,9 @@ Game.prototype.destroy = function(r) {
  * Render the game screen, updating the game state as necessary.
  */
 Game.prototype.render = function(r) {
+	if (!this.world) {
+		this.nextSegment(true);
+	}
 	var gl = r.gl;
 	this.time.update(r.time);
 	var frac = this.time.frac;
@@ -117,6 +111,27 @@ Game.prototype.step = function(dt) {
 	this.player.step(this);
 	this.world.step(dt);
 	this.camera.step();
+};
+
+/*
+ * Transition to the next segment.
+ */
+Game.prototype.nextSegment = function(isFirst) {
+	var offset;
+	this.world = physics.createWorld();
+	segment.makeSegment(this, 2);
+	if (isFirst) {
+		this.player = new player.Player();
+		offset = [0, -param.Level.MaxGap * 0.5 + 1];
+	} else {
+
+	}
+	this.player.addToWorld(this.world, offset);
+	physics.settle(this.world, 1 / param.Rate, 3.0);
+	this.camera.set({ target: this.player.body });
+	if (isFirst) {
+		this.camera.reset();
+	}
 };
 
 // We export through the state module.

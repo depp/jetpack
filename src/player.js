@@ -18,19 +18,34 @@ var PlayerColorU32 = color.rgb.apply(null, PlayerColor);
  */
 function Player() {
 	var g = param.Game;
+	this.body = null;
+	this._drag = g.Drag;
+	this._jetForceUp = g.Mass * g.Jetpack;
+	this._jetForceForward = g.Speed * g.Speed * g.Drag;
+}
+
+/*
+ * Add the player to the world.
+ *
+ * For the first segment, the offset is just the entry point.  For
+ * later segments, the offset is the conversion between the previous
+ * world and the new world.
+ *
+ * world: The P2 world
+ * offset: The offset where the player should be added
+ */
+Player.prototype.addToWorld = function(world, offset) {
+	var g = param.Game;
 	this.body = new p2.Body({
 		mass: g.Mass,
-		position: [0, 0],
+		position: offset,
 		fixedRotation: true,
 	});
 	var shape = new p2.Circle({ radius: 1 });
 	shape.material = physics.Material.Player;
 	this.body.addShape(shape);
-
-	this._drag = g.Drag;
-	this._jetForceUp = g.Mass * g.Jetpack;
-	this._jetForceForward = g.Speed * g.Speed * g.Drag;
-}
+	world.addBody(this.body);
+};
 
 /*
  * Advance by one frame.
