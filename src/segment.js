@@ -109,13 +109,12 @@ Border.prototype.emitTiles = function(tiles, color) {
 			th = Math.max(th, Math.floor(dirY * (this.y1 - this.y) * 0.5 + 1));
 		}
 		if (tw === 0) {
+			th = 0;
 			if (state) {
 				tw = util.randInt(3, 5);
-				th = 3;
 				state = false;
 			} else {
 				tw = util.randInt(5, 10);
-				th = 2;
 				state = true;
 			}
 			if (tw >= remW - 1) {
@@ -128,6 +127,7 @@ Border.prototype.emitTiles = function(tiles, color) {
 				}
 			}
 		}
+		th = Math.max(th, 24);
 		remW -= tw;
 		newTiles.push({
 			x: x + tw,
@@ -499,7 +499,7 @@ function makeSegment(game, type) {
 	seg.addBorder(y1, x, true, true);
 
 	var levelW = util.randInt(150, 225) * 2;
-	levelW = util.randInt(50, 50) * 2;
+	levelW = 100;
 	switch (type) {
 	default:
 	case 0:
