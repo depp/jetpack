@@ -21,13 +21,19 @@ function set(screen) {
 function render(r) {
 	var newScreen = pending;
 	pending = null;
-	if (newScreen) {
-		if (current) {
-			current.destroy(r);
-			current = null;
+	try {
+		if (newScreen) {
+			if (current) {
+				current.destroy(r);
+				current = null;
+			}
+			newScreen.init(r);
+			current = newScreen;
 		}
-		newScreen.init(r);
-		current = newScreen;
+	} catch (e) {
+		console.error('Error when changing screens, stopping game');
+		window.Game.stop();
+		throw e;
 	}
 	if (current) {
 		current.render(r);
