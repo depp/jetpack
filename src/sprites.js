@@ -5,16 +5,12 @@
    terms of the MIT license.  See LICENSE.txt for details. */
 'use strict';
 
-var prog;
 var shader = require('./shader');
-
-var STATE_UNLOADED = 0, STATE_LOADED = 1, STATE_FAILED = 2;
 
 /*
  * Sprite layer.
  */
 function Sprites() {
-	this.loadState = 0; // 0=unloaded, 1=loaded, 2=failed
 	this.program = null;
 
 	this.count = 0;           // number of sprites
@@ -30,27 +26,44 @@ function Sprites() {
 }
 
 /*
- * Draw the sprite layer to the screen.
- * gl: WebGL context
+ * Initialize the sprite layer.
  */
-Sprites.prototype.draw = function(gl, mvp) {
+Sprites.prototype.init = function(r) {
+	if (this.program) {
+		return;
+	}
+	this.program = shader.loadProgram(r.gl, {
+		vert: 'plain.vert',
+		frag: 'plain.frag',
+		attributes: 'Pos Color',
+		uniforms: 'MVP',
+	});
+};
+
+/*
+ * Destroy the sprite layer.
+ */
+Sprites.prototype.destroy = function(r) {
+	if (this.program) {
+		this.program.destroy(r);
+	}
+	if (this.vbuffer) {
+		r.gl.deleteBuffer(this.vbuffer);
+	}
+	if (this.ibuffer) {
+		r.gl.deleteBuffer(this.ibuffer);
+	}
+};
+
+/*
+ * Draw the sprite layer to the screen.
+ */
+Sprites.prototype.render = function(r, camera) {
+	var gl = r.gl;
 	var i;
 
-	if (this.loadState !== STATE_LOADED) {
-		if (this.loadState !== STATE_UNLOADED) {
-			return;
-		}
-		this.loadState = STATE_FAILED;
-		this.program = shader.loadProgram(gl, {
-			vert: 'plain.vert',
-			frag: 'plain.frag',
-			attributes: 'Pos Color',
-			uniforms: 'MVP',
-		});
-		if (!this.program) {
-			return;
-		}
-		this.loadState = STATE_LOADED;
+	if (!this.program || !this.count) {
+		return;
 	}
 
 	if (this.vdirty) {
@@ -92,7 +105,7 @@ Sprites.prototype.draw = function(gl, mvp) {
 	}
 
 	gl.useProgram(this.program.program);
-	gl.uniformMatrix4fv(this.program.MVP, false, mvp);
+	gl.uniformMatrix4fv(this.program.MVP, false, camera.MVP);
 	gl.bindBuffer(gl.ARRAY_BUFFER, this.vbuffer);
 	gl.enableVertexAttribArray(0);
 	gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 8, this.voff_pos);

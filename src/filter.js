@@ -40,7 +40,7 @@ function filterDestroy(r) {
 	/*jshint validthis:true*/
 	var gl = r.gl;
 	if (this.prog) {
-		gl.deleteProgram(this.prog.program);
+		this.prog.destroy();
 	}
 	if (this.vbuf) {
 		gl.deleteBuffer(this.vbuf);

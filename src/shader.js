@@ -70,7 +70,14 @@ function loadProgram(gl, p) {
 		gl.deleteProgram(program);
 		return null;
 	}
-	var obj = { program: program };
+	var obj = {
+		program: program,
+		destroy: function(r) {
+			if (this.program) {
+				gl.deleteProgram(this.program);
+			}
+		},
+	};
 	if (p.uniforms) {
 		var uniform = p.uniforms.split(' ');
 		for (i = 0; i < uniform.length; i++) {

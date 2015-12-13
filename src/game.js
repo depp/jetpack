@@ -27,7 +27,9 @@ function Game() {
 	// Timing manager
 	this.time = new time.Time(this);
 
-	// Sprite layer
+	// Graphics layers
+	this.background = new background.Background();
+	this.background.setGrid();
 	this.sprites = new sprites.Sprites();
 
 	// Physics engine
@@ -64,9 +66,6 @@ function Game() {
 		targetY: 0,
 		leading: g.Leading / g.Speed,
 	});
-
-	this.background = new background.Background(this.camera);
-	this.background.setGrid();
 }
 
 /*
@@ -74,6 +73,7 @@ function Game() {
  */
 Game.prototype.init = function(r) {
 	this.background.init(r);
+	this.sprites.init(r);
 	control.game.enable();
 };
 
@@ -93,10 +93,10 @@ Game.prototype.render = function(r) {
 	this.time.update(r.time);
 	var frac = this.time.frac;
 	this.camera.update(r, frac);
-	this.background.render(r);
 	this.sprites.clear();
 	this.player.emit(this, frac);
-	this.sprites.draw(gl, this.camera.MVP);
+	this.background.render(r, this.camera);
+	this.sprites.render(r, this.camera);
 };
 
 /*

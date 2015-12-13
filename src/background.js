@@ -11,8 +11,7 @@ var vec2 = glm.vec2;
 var filter = require('./filter');
 var param = require('./param');
 
-function Background(camera) {
-	this._camera = camera;
+function Background() {
 	this._filter = null;
 	this._pending = null;
 }
@@ -43,7 +42,7 @@ Background.prototype.destroy = function(r) {
 /*
  * Render the background.
  */
-Background.prototype.render = function(r) {
+Background.prototype.render = function(r, camera) {
 	if (this._pending) {
 		if (this._filter) {
 			this._filter.destroy(r);
@@ -55,7 +54,7 @@ Background.prototype.render = function(r) {
 	}
 	var f = this._filter;
 	if (f) {
-		vec2.add(f.pos, this._camera.pos, f.offset);
+		vec2.add(f.pos, camera.pos, f.offset);
 		f.render(r);
 	}
 };
