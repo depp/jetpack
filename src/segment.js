@@ -10,8 +10,33 @@ var param = require('./param');
 var physics = require('./physics');
 var util = require('./util');
 
-var BufferFloorColor = color.rgb(0.2, 0.2, 0.2);
-var BufferCeilingColor = color.rgb(0.8, 0.8, 0.8);
+function tweakColor(c) {
+	var tint = 0.2 * Math.random();
+	var shade = 0.2 * Math.random();
+	var rem = 1 - tint - shade;
+	return color.rgb(
+		tint + c[0] * rem, tint + c[1] * rem, tint + c[2] * rem
+	);
+}
+
+var Colors = {
+	Buffer: {
+		Floor: color.rgb(0.2, 0.2, 0.2),
+		Ceiling: color.rgb(0.8, 0.8, 0.8),
+	},
+	Open: {
+		Floor: [0.2, 0.6, 0.2],
+		Ceiling: [0.6, 1.0, 0.6],
+	},
+	Medium: {
+		Floor: [0.6, 0.5, 0.2],
+		Ceiling: [1.0, 0.9, 0.5],
+	},
+	Closed: {
+		Floor: [0.6, 0.1, 0.2],
+		Ceiling: [1.0, 0.5, 0.5],
+	},
+};
 
 /*
  * Border: either a floor or a ceiling.
@@ -58,7 +83,7 @@ Border.prototype.emitBody = function(world, yLimit) {
 /*
  * Emit the border tile graphics.
  */
-Border.prototype.emitTiles = function(tiles) {
+Border.prototype.emitTiles = function(tiles, color) {
 	var remW = Math.floor((1 + this.x1 - this.x0) * 0.5);
 	var x = this.x0, y = this.y, dirY = this.isCeiling ? +1 : -1;
 	if (this.isBuffer) {
@@ -67,7 +92,7 @@ Border.prototype.emitTiles = function(tiles) {
 			y: y + dirY,
 			w: remW * 2,
 			h: 2,
-			color: this.isCeiling ? BufferCeilingColor : BufferFloorColor,
+			color: this.isCeiling ? Colors.Buffer.Ceiling : Colors.Buffer.Floor,
 		}]);
 		return;
 	}
@@ -109,7 +134,7 @@ Border.prototype.emitTiles = function(tiles) {
 			y: y + th * dirY,
 			w: tw * 2,
 			h: th * 2,
-			color: color.rgb(Math.random(), Math.random(), Math.random()),
+			color: tweakColor(color),
 		});
 		x += tw * 2;
 	}
@@ -119,12 +144,13 @@ Border.prototype.emitTiles = function(tiles) {
 /*
  * A segment of a level.
  */
-function Segment(x0) {
+function Segment(x0, colors) {
 	var level = param.Level;
 	var y1 = level.MaxGap * 0.5, y0 = -y1;
 	this.x0 = x0;
 	this.floor = { x: x0, y: y0, items: [] };
 	this.ceiling = { x: x0, y: y1, items: [] };
+	this.colors = colors;
 }
 
 /*
@@ -440,8 +466,11 @@ Segment.prototype.emit = function(game) {
 
 	var tiles = game.tiles;
 	tiles.clear();
-	_.forEach(this.floor.items, function(it) { it.emitTiles(tiles); });
-	_.forEach(this.ceiling.items, function(it) { it.emitTiles(tiles); });
+	var color;
+	color = this.colors.Floor;
+	_.forEach(this.floor.items, function(it) { it.emitTiles(tiles, color); });
+	color = this.colors.Ceiling;
+	_.forEach(this.ceiling.items, function(it) { it.emitTiles(tiles, color); });
 
 	var x0 = this.x0, x1 = this.extendBorders();
 	var arr0 = getHeightArray(this.floor.items, x0, x1);
@@ -465,7 +494,7 @@ Segment.prototype.emit = function(game) {
  */
 function makeSegment() {
 	var w = param.Level.BufferWidth, x = -w / 2;
-	var seg = new Segment(x);
+	var seg = new Segment(x, Colors.Closed);
 	seg.addBorder(seg.floor.y, x + w, false, true);
 	seg.addBorder(seg.ceiling.y, x + w, true, true);
 	for (var j = 0; j < 10; j++) {
