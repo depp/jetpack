@@ -54,7 +54,7 @@ function Game() {
 	this.world = physics.createWorld();
 
 	// Occupants
-	this.segment = segment.makeSegment();
+	this.segment = segment.makeSegment(2);
 	this.player = new player.Player();
 	this.world.addBody(this.player.body);
 

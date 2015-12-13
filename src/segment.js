@@ -144,13 +144,13 @@ Border.prototype.emitTiles = function(tiles, color) {
 /*
  * A segment of a level.
  */
-function Segment(x0, colors) {
+function Segment(x0) {
 	var level = param.Level;
 	var y1 = level.MaxGap * 0.5, y0 = -y1;
 	this.x0 = x0;
 	this.floor = { x: x0, y: y0, items: [] };
 	this.ceiling = { x: x0, y: y1, items: [] };
-	this.colors = colors;
+	this.colors = null;
 }
 
 /*
@@ -283,7 +283,7 @@ Segment.prototype.addVaryingBorders = function() {
 			}
 			this.addBorder(y0, x, false);
 			this.addBorder(y1, x, true);
-			return;
+			return x;
 		} else {
 			// Gradual changes
 			// console.log((type == SHRINK ? 'SHRINK' : 'GROW') + ' GRADUAL');
@@ -364,6 +364,7 @@ Segment.prototype.addVaryingBorders = function() {
 		this.addBorder(y0, x0, false);
 		this.addBorder(y1, x1, true);
 	}
+	return Math.max(x0, x1);
 };
 
 /*
@@ -492,18 +493,45 @@ Segment.prototype.emit = function(game) {
 /*
  * Create a random level segment.
  */
-function makeSegment() {
-	var w = param.Level.BufferWidth, x = -w / 2;
-	var seg = new Segment(x, Colors.Closed);
-	seg.addBorder(seg.floor.y, x + w, false, true);
-	seg.addBorder(seg.ceiling.y, x + w, true, true);
-	for (var j = 0; j < 10; j++) {
-		seg.addVaryingBorders();
+function makeSegment(type) {
+	var bufW = param.Level.BufferWidth, x = -bufW;
+	var seg = new Segment(x);
+	x += bufW;
+	seg.addBorder(seg.floor.y, x, false, true);
+	seg.addBorder(seg.ceiling.y, x, true, true);
+
+	var levelW = util.randInt(150, 225) * 2;
+	switch (type) {
+	default:
+	case 0:
+		// "Open style" / green - no obstacles, or almost none
+		seg.colors = Colors.Open;
+		seg.extendBorders(x + levelW);
+		break;
+
+	case 1:
+		// "Medium style" / yellow - some obstacles
+		seg.colors = Colors.Medium;
+		seg.extendBorders(x + levelW);
+		break;
+
+	case 2:
+		// "Closed style" / red - twisty and narrow, changing elevation
+		seg.colors = Colors.Closed;
+		for (var j = 0; j < 100; j++) {
+			x = seg.addVaryingBorders();
+			if (x >= levelW) {
+				break;
+			}
+		}
+		break;
 	}
+
 	x = seg.extendBorders();
 	var y0 = seg.floor.y, y1 = y0 + param.Level.MaxGap;
-	seg.addBorder(y0, x + w, false, true);
-	seg.addBorder(y1, x + w, true, true);
+	x += bufW;
+	seg.addBorder(y0, x, false, true);
+	seg.addBorder(y1, x, true, true);
 	return seg;
 }
 
