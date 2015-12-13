@@ -51,6 +51,7 @@ module.exports = {
 		// Minimum gap between floor and ceiling
 		MinGap: 12,
 		// Width of buffer between segments
-		BufferWidth: 64,
+		// A little wider than the screen, so we can hide transitions
+		BufferWidth: 70,
 	},
 };
