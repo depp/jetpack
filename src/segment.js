@@ -7,26 +7,41 @@
 
 var color = require('./color');
 var param = require('./param');
+var util = require('./util');
 
-function emitBorder(tiles, minX, maxX) {
-	var yoff = param.LevelY * 0.5 + 1;
+/*
+ * Emit the floor and ceiling tiles.
+ *
+ * tiles: The tiles layer
+ * minX: The leftmost edge to generate
+ * maxX: The right edge to generate
+ * dirY: The vertical direction of tiles (ceiling +1, floor -1)
+ * posY: The edge of the tile, vertically
+ */
+function emitBorder(tiles, minX, maxX, dirY, posY) {
 	var newTiles = [];
-	for (var i = 0; i < 2; i++) {
-		var isFloor = i === 0;
-		var y = isFloor ? -yoff : yoff, x = minX;
-		while (x < maxX) {
-			var tw = 2 + Math.floor(Math.random() * 9);
-			newTiles.push({
-				x: x + tw,
-				y: y,
-				w: tw * 2,
-				h: 2,
-				color: color.rgb(Math.random(), Math.random(), Math.random()),
-			});
-			x += tw * 2;
+	var x = minX, remW = Math.floor((1 + maxX - minX) * 0.5);
+	while (remW > 0) {
+		var tw = util.randInt(2, 10);
+		remW -= tw;
+		if (remW <= 1) {
+			if (tw <= 4 || remW <= 0) {
+				tw += remW;
+				remW = 0;
+			} else {
+				tw -= 2;
+				remW += 2;
+			}
 		}
+		newTiles.push({
+			x: x + tw,
+			y: posY + dirY,
+			w: tw * 2,
+			h: 2,
+			color: color.rgb(Math.random(), Math.random(), Math.random()),
+		});
+		x += tw * 2;
 	}
-	console.log(newTiles);
 	tiles.add(newTiles);
 }
 
@@ -42,7 +57,10 @@ function Segment() {
  */
 Segment.prototype.activate = function(game) {
 	game.tiles.clear();
-	emitBorder(game.tiles, -32, +32);
+	var height = param.LevelY;
+	var floor = height * -0.5, ceiling = height * 0.5;
+	emitBorder(game.tiles, -32, +32, -1, floor);
+	emitBorder(game.tiles, -32, +32, +1, ceiling);
 };
 
 module.exports = {

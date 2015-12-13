@@ -43,6 +43,14 @@ function genIndexArray(n) {
 	return a;
 }
 
+/*
+ * Generate a random integer in an inclusive range.
+ */
+function randInt(min, max) {
+	return min + Math.floor(Math.random() * (1 + max - min));
+}
+
 module.exports = {
 	genIndexArray: genIndexArray,
+	randInt: randInt,
 };
