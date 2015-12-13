@@ -7,7 +7,7 @@
 
 module.exports = {
 	// Physics update rate, in Hz.
-	Rate: 30,
+	Rate: 60,
 
 	// Span of vertical field of view
 	FovY: 36,
