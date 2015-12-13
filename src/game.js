@@ -13,18 +13,10 @@ var camera = require('./camera');
 var control = require('./control');
 var param = require('./param');
 var physics = require('./physics');
+var player = require('./player');
 var sprites = require('./sprites');
 var state = require('./state');
 var time = require('./time');
-
-/*
- * Calculate the interpolated position of a body.
- */
-function bodyPos(body, frac) {
-	// P2 can do this for us, but we will figure that out later.
-	var p = body.position, pp = body.previousPosition;
-	return [pp[0] + (p[0] - pp[0]) * frac, pp[1] + (p[1] - pp[1]) * frac];
-}
 
 /*
  * Main game screen.
@@ -42,17 +34,10 @@ function Game() {
 	this.world = physics.createWorld();
 
 	// Occupants
-	var shape;
-	this.bbody = new p2.Body({
-		mass: g.Mass,
-		position: [0, 0],
-		fixedRotation: true,
-	});
-	shape = new p2.Circle({ radius: 1 });
-	shape.material = physics.Material.Player;
-	this.bbody.addShape(shape);
-	this.world.addBody(this.bbody);
+	this.player = new player.Player();
+	this.world.addBody(this.player.body);
 
+	var shape;
 	this.plane0 = new p2.Body({
 		mass: 0,
 		position: [0, -16],
@@ -75,19 +60,13 @@ function Game() {
 
 	// Camera
 	this.camera = new camera.Camera({
-		target: this.bbody,
+		target: this.player.body,
 		targetY: 0,
 		leading: g.Leading / g.Speed,
 	});
 
 	this._bg = new background.Background(this.camera);
 	this._bg.setGrid();
-
-	// Minimum dot product which is considered "ground"
-	this._groundThreshold = Math.cos(g.GroundAngle * (Math.PI / 180));
-	this._drag = g.Drag;
-	this._jetForceUp = g.Mass * g.Jetpack;
-	this._jetForceForward = g.Speed * g.Speed * g.Drag;
 }
 
 /*
@@ -115,11 +94,9 @@ Game.prototype.render = function(r) {
 	this.time.update(r.time);
 	var frac = this.time.frac;
 	this.camera.update(r, frac);
-
 	this._bg.render(r);
 	this.sprites.clear();
-	var pos = bodyPos(this.bbody, frac);
-	this.sprites.add({ x: pos[0], y: pos[1], radius: 1.0, color: 0xff007fff });
+	this.player.emit(this, frac);
 	this.sprites.draw(gl, this.camera.MVP);
 };
 
@@ -129,47 +106,10 @@ Game.prototype.render = function(r) {
  * dt: The timestep, in s
  */
 Game.prototype.step = function(dt) {
-	var ctl = control.game;
-	ctl.update();
-	var vx = this.bbody.velocity[0], vy = this.bbody.velocity[1];
-	var vmag2 = vx * vx + vy * vy;
-	var fdrag = vmag2 * this._drag;
-	var a = vmag2 > 1e-3 ? 1.0 / Math.sqrt(vmag2) : 0;
-	var fx = -fdrag * a * vx, fy = -fdrag * a * vy;
-	if (ctl.jet.state) {
-		fy += this._jetForceUp;
-	}
-	var grounded = this.isGrounded(this.bbody);
-	if (!grounded) {
-		fx += this._jetForceForward;
-	}
-	this.bbody.applyForce([fx, fy]);
+	control.game.update();
+	this.player.step(this);
 	this.world.step(dt);
 	this.camera.step();
-};
-
-/*
- * Test wether a body is touching the ground.
- */
-Game.prototype.isGrounded = function(body) {
-	if (body.sleepState === body.SLEEPING) {
-		return true;
-	}
-	var eqs = this.world.narrowphase.contactEquations;
-	var thresh = this._groundThreshold;
-	for (var i = 0; i< eqs.length; i++){
-		var eq = eqs[i];
-		if (eq.bodyA === body) {
-			if (-eq.normalA[1] >= thresh) {
-				return true;
-			}
-		} else if (eq.bodyB === body) {
-			if (eq.normalA[1] >= thresh) {
-				return true;
-			}
-		}
-	}
-	return false;
 };
 
 /*

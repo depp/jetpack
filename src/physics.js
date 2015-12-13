@@ -7,6 +7,9 @@
 
 var param = require('./param');
 
+// GroundAngle expressed as a dot product
+var GroundThreshold = Math.cos(param.Game.GroundAngle * (Math.PI / 180));
+
 /*
  * Materials
  */
@@ -23,6 +26,15 @@ var Contact = [
 		friction: param.Game.Friction,
 	}),
 ];
+
+/*
+ * Calculate the interpolated position of a body.
+ */
+function bodyPos(body, frac) {
+	// P2 can do this for us, but we will figure that out later.
+	var p = body.position, pp = body.previousPosition;
+	return [pp[0] + (p[0] - pp[0]) * frac, pp[1] + (p[1] - pp[1]) * frac];
+}
 
 /*
  * Create a new world.
@@ -85,8 +97,35 @@ function settle(world, dt, maxTime) {
 	world.sleepMode = oldSleep;
 }
 
+
+/*
+ * Test wether a body is touching the ground.
+ */
+function isGrounded(world, body) {
+	if (body.sleepState === body.SLEEPING) {
+		return true;
+	}
+	var eqs = world.narrowphase.contactEquations;
+	var thresh = GroundThreshold;
+	for (var i = 0; i< eqs.length; i++){
+		var eq = eqs[i];
+		if (eq.bodyA === body) {
+			if (-eq.normalA[1] >= thresh) {
+				return true;
+			}
+		} else if (eq.bodyB === body) {
+			if (eq.normalA[1] >= thresh) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
 module.exports = {
 	Material: Material,
+	bodyPos: bodyPos,
 	createWorld: createWorld,
 	settle: settle,
+	isGrounded: isGrounded,
 };
