@@ -12,6 +12,69 @@
 var filter = require('./filter');
 var state = require('./state');
 
+var Loaded = false;
+var Images;
+
+/*
+ * Load all images
+ *
+ * assetInfo: Asset info dictionary
+ * func: Callback when complete
+ */
+function loadImages(assetInfo, func) {
+	Images = {};
+	var info = assetInfo.images;
+	var count = _.size(info), loaded = 0;
+	_.forOwn(info, function(path, name) {
+		var img = new Image();
+		img.addEventListener('load', function() {
+			console.log('Loaded: ' + name);
+			loaded++;
+			if (loaded >= count) {
+				func();
+			}
+		}, false);
+		img.src = 'assets/images/' + path;
+		Images[name] = img;
+	});
+	if (!count) {
+		func();
+	}
+}
+
+/*
+* Get an image.
+*/
+function getImage(name) {
+	var img = Images[name];
+	if (!img) {
+		console.warn('No such image: ' + name);
+		return null;
+	}
+	return img;
+}
+
+/*
+ * Load all assets.
+ *
+ * assetInfo: Asset info dictionary
+ * func: Callback when complete
+ */
+function loadAll(assetInfo, func) {
+	if (Loaded) {
+		return;
+	}
+	var count = 1, loaded = 0;
+	function func2() {
+		loaded++;
+		Loaded = true;
+		if (loaded >= count) {
+			func();
+		}
+	}
+	loadImages(assetInfo, func2);
+}
+
 /*
  * Loading screen.
  */
@@ -55,6 +118,9 @@ function Load() {
  * Initialize the screen.
  */
 Load.prototype.init = function(r) {
+	loadAll(window.AssetInfo, function() {
+		state.set(new state.Game());
+	});
 	this._bg.init(r);
 	this._startTime = r.time;
 };
@@ -70,11 +136,12 @@ Load.prototype.destroy = function(r) {
  * Render the loading screen.
  */
 Load.prototype.render = function(r) {
-	if (r.time >= this._startTime + 100) {
-		state.set(new state.Game());
-	}
 	this._bg.render(r);
 };
 
 // We export through the state module.
 state.Load = Load;
+
+module.exports = {
+	getImage: getImage,
+};

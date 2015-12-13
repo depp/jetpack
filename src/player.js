@@ -57,8 +57,9 @@ Player.prototype.emit = function(game, frac) {
 	game.sprites.add({
 		x: pos[0],
 		y: pos[1],
-		radius: 1.0,
+		radius: 1.5,
 		color: color.rgb(1, 0, 0.5),
+		sprite: 'PStand',
 	});
 };
 
