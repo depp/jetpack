@@ -63,14 +63,12 @@ Time.prototype.update = function(curTime) {
 		if (curTime > lastTime + param.MaxUpdateInterval * 1e3) {
 			// Too much time since last call, skip missing time
 			console.warn('Lag');
-			this._target.step(this._dt);
 			this._step(curTime);
 			this.frac = 0;
 			this.elapsed = this._frame * this._dt;
 			return;
 		}
 		do {
-			this._target.step(this._dt);
 			this._step(this._step1);
 		} while (curTime >= this._step1);
 	}
@@ -81,11 +79,12 @@ Time.prototype.update = function(curTime) {
 };
 
 /*
- * Advance the timing by one frame.
+ * Advance the simulation by one frame.
  *
  * time: The time at which the update takes place, in ms
  */
 Time.prototype._step = function(stepTime) {
+	this._target.step(this._dt);
 	this._step0 = stepTime;
 	this._step1 = stepTime + this._dt * 1e3;
 };

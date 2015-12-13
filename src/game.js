@@ -84,9 +84,6 @@ Game.prototype.destroy = function(r) {
  * Render the game screen, updating the game state as necessary.
  */
 Game.prototype.render = function(r) {
-	if (!this.world) {
-		this.nextSegment(true);
-	}
 	var gl = r.gl;
 	this.time.update(r.time);
 	var frac = this.time.frac;
@@ -107,6 +104,13 @@ Game.prototype.render = function(r) {
  * dt: The timestep, in s
  */
 Game.prototype.step = function(dt) {
+	if (!this.world) {
+		this.nextSegment(true);
+	} else {
+		if (this.camera.pos[0] > this.buffers[1][0]) {
+			this.nextSegment(false);
+		}
+	}
 	control.game.update();
 	this.player.step(this);
 	this.world.step(dt);
@@ -123,18 +127,20 @@ Game.prototype.nextSegment = function(isFirst) {
 		offset = [0, -param.Level.MaxGap * 0.5 + 1];
 	} else {
 		b = this.buffers[1];
-		offset = [-0.5 * (b.x0 + b.x1), -0.5 * (b.y0 + b.y1)];
+		offset = [-b[0], -b[1]];
 	}
 	this.world = physics.createWorld();
 	segment.makeSegment(this, 2);
 	b = this.buffers[0];
-	offset[0] += 0.5 * (b.x0 + b.x1);
-	offset[1] += 0.5 * (b.y0 + b.y1);
+	offset[0] += b[0];
+	offset[1] += b[1];
 	this.player.addToWorld(this.world, offset);
 	this.camera.set({ target: this.player.body });
 	if (isFirst) {
 		physics.settle(this.world, 1 / param.Rate, 3.0);
 		this.camera.reset();
+	} else {
+		this.camera.addOffset(offset);
 	}
 };
 

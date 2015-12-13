@@ -493,12 +493,13 @@ function makeSegment(game, type) {
 	var bufW = param.Level.BufferWidth, x = -128;
 	var seg = new Segment(x);
 	var y0 = seg.floor.y, y1 = seg.ceiling.y;
-	var buffers = [{ y0: y0, y1: y1, x0: x, x1: x + bufW }];
+	var buffers = [[x + 0.5 * bufW, 0.5 * (y0 + y1)]];
 	x += bufW;
 	seg.addBorder(y0, x, false, true);
 	seg.addBorder(y1, x, true, true);
 
 	var levelW = util.randInt(150, 225) * 2;
+	levelW = util.randInt(50, 50) * 2;
 	switch (type) {
 	default:
 	case 0:
@@ -529,7 +530,7 @@ function makeSegment(game, type) {
 	y1 = y0 + param.Level.MaxGap;
 	x = seg.x1;
 	seg.extendBorders(x);
-	buffers.push({ y0: y0, y1: y1, x0: x, x1: x + bufW });
+	buffers.push([x + 0.5 * bufW, 0.5 * (y0 + y1)]);
 	x += bufW;
 	seg.addBorder(y0, x, false, true);
 	seg.addBorder(y1, x, true, true);

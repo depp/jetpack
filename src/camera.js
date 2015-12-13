@@ -166,6 +166,17 @@ Filter.prototype.update = function(inPos) {
 	this.pos[1] = y;
 };
 
+/*
+ * Add an offset to the camera without changing anything else
+ */
+Filter.prototype.addOffset = function(dx, dy) {
+	var n = this.order;
+	for (var i = 0; i < n; i++) {
+		this.data[i*2+0] += dx;
+		this.data[i*2+1] += dy;
+	}
+};
+
 /**********************************************************************/
 
 /*
@@ -260,6 +271,15 @@ Camera.prototype.update = function(r, frac) {
 	this._proj[5] = 2/fovY;
 	mat4.translate(this._mvp, this._proj, this._translate);
 	this.MVP = this._mvp;
+};
+
+/*
+ * Add an offset to the camera without changing anything else
+ */
+Camera.prototype.addOffset = function(off) {
+	this._filter.addOffset(off[0], off[1]);
+	vec2.add(this._pos0, this._pos0, off);
+	vec2.add(this._pos1, this._pos1, off);
 };
 
 module.exports = {

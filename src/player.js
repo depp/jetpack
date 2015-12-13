@@ -38,6 +38,11 @@ Player.prototype.addToWorld = function(world, offset) {
 	var g = param.Game;
 	var pos = [offset[0], offset[1]];
 	var vel = [0, 0];
+	if (this.body) {
+		pos[0] += this.body.position[0];
+		pos[1] += this.body.position[1];
+		vel = [this.body.velocity[0], this.body.velocity[1]];
+	}
 	this.body = new p2.Body({
 		mass: g.Mass,
 		position: pos,
