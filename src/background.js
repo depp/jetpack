@@ -77,8 +77,8 @@ Background.prototype.setGrid = function() {
 				0.1, 1 / 4,
 			]);
 			gl.uniform4fv(p.Color, [
-				0.2, 0.2, 0.2, 1.0,
-				0.3, 0.4, 0.5, 1.0,
+				0.15, 0.15, 0.15, 1.0,
+				0.1, 0.1, 0.3, 1.0,
 			]);
 		},
 	});
