@@ -355,6 +355,53 @@ function getNeighborHeights(its) {
 }
 
 /*
+ * Get the height array of the border.
+ */
+function getHeightArray(its, x0, x1) {
+	var a = new Int16Array(x1 - x0);
+	var x = x0, y = 0, tx;
+	for (var i = 0; i < its.length; i++) {
+		tx = its[i].x1;
+		y = its[i].y;
+		while (x < tx) {
+			a[x - x0] = y;
+			x++;
+		}
+	}
+	while (x < x1) {
+		a[x - x0] = y;
+		x++;
+	}
+	return a;
+}
+
+/*
+ * Dilate the array with a 32-width kernel.
+ */
+function erodeArray(a) {
+	var i, j, n;
+	for (i = 0; i < 5; i++) {
+		n = 1 << i;
+		for (j = 0; j < a.length - n; j++) {
+			a[j] = Math.min(a[j], a[j+n]);
+		}
+	}
+}
+
+/*
+ * Dilate the array with a 32-width kernel.
+ */
+function dilateArray(a) {
+	var i, j, n;
+	for (i = 0; i < 5; i++) {
+		n = 1 << i;
+		for (j = 0; j < a.length - n; j++) {
+			a[j] = Math.max(a[j], a[j+n]);
+		}
+	}
+}
+
+/*
  * Emit segment data.
  */
 Segment.prototype.emit = function(game) {
@@ -390,6 +437,22 @@ Segment.prototype.emit = function(game) {
 	tiles.clear();
 	_.forEach(this.floor.items, function(it) { it.emitTiles(tiles); });
 	_.forEach(this.ceiling.items, function(it) { it.emitTiles(tiles); });
+
+	var x0 = this.x0, x1 = this.extendBorders();
+	var arr0 = getHeightArray(this.floor.items, x0, x1);
+	var arr1 = getHeightArray(this.ceiling.items, x0, x1);
+	erodeArray(arr0);
+	dilateArray(arr1);
+	var arr2 = new Int16Array(arr0.length);
+	for (var i = 0; i < arr0.length; i++) {
+		arr2[i] = Math.floor((arr0[i] + arr1[i]) * 0.5);
+	}
+	var ymin = _.min(arr0), ymax = _.max(arr2);
+	if (ymin == ymax) {
+		game.camera.setTrackY(x0, ymin);
+	} else {
+		game.camera.setTrackY(x0, arr2);
+	}
 };
 
 /*

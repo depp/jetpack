@@ -40,18 +40,17 @@ function Game() {
 
 	// Occupants
 	this.segment = segment.makeSegment();
-	this.segment.emit(this);
 	this.player = new player.Player();
 	this.world.addBody(this.player.body);
-
-	physics.settle(this.world, 1 / param.Rate, 3.0);
 
 	// Camera
 	this.camera = new camera.Camera({
 		target: this.player.body,
-		// targetY: 0,
 		leading: g.Leading / g.Speed,
 	});
+
+	this.segment.emit(this);
+	physics.settle(this.world, 1 / param.Rate, 3.0);
 }
 
 /*

@@ -17,11 +17,12 @@ var mat4 = glm.mat4;
  */
 function Tracker() {
 	this.targets = [];
-	this.lockX = false;
 	this.lockY = false;
 	this.pos = [0, 0];
 	this.offset = [0, 0];
 	this.leading = 0;
+	this.trackX0 = 0;
+	this.trackY = 0;
 }
 
 /*
@@ -29,7 +30,6 @@ function Tracker() {
  *
  * arg.target: Target to track
  * arg.targets: Targets to track
- * arg.targetX: Locked X position
  * arg.targetY: Locked Y position
  * arg.offsetX: X offset from tracked targets
  * arg.offsetY: Y offset from tracked targets
@@ -53,21 +53,16 @@ Tracker.prototype.set = function(arg, leading) {
 		this.targets = newTargets;
 	}
 
-	if (arg.hasOwnProperty('targetX')) {
-		if (arg.targetX !== null) {
-			this.lockX = true;
-			this.pos[0] = arg.targetX;
-		} else {
-			this.lockX = false;
-		}
-	}
-
 	if (arg.hasOwnProperty('targetY')) {
 		if (arg.targetY !== null) {
 			this.lockY = true;
 			this.pos[1] = arg.targetY;
+			this.trackX0 = 0;
+			this.trackY = arg.targetY;
 		} else {
 			this.lockY = false;
+			this.trackX0 = 0;
+			this.trackY = 0;
 		}
 	}
 
@@ -80,6 +75,18 @@ Tracker.prototype.set = function(arg, leading) {
 	}
 
 	this.leading = leading;
+};
+
+/*
+ * Set the camera Y position.
+ *
+ * x0: The initial x position for the track
+ * y: Either a constant or an array of Y values
+ */
+Tracker.prototype.setTrackY = function(x0, y) {
+	this.lockY = true;
+	this.trackX0 = x0;
+	this.trackY = y;
 };
 
 /*
@@ -97,11 +104,17 @@ Tracker.prototype.update = function() {
 		y += p[1] + v[1] * lead;
 	}
 	var a = 1.0 / t.length;
-	if(!this.lockX) {
-		this.pos[0] = x * a + this.offset[0];
-	}
+	this.pos[0] = x * a + this.offset[0];
 	if (!this.lockY) {
 		this.pos[1] = y * a + this.offset[1];
+	} else {
+		if (typeof this.trackY == 'number') {
+			this.pos[1] = this.trackY;
+		} else {
+			var idx = Math.round(this.pos[0]) - this.trackX0;
+			idx = Math.max(0, Math.min(this.trackY.length - 1, idx));
+			this.pos[1] = this.trackY[idx];
+		}
 	}
 };
 
@@ -160,7 +173,6 @@ Filter.prototype.update = function(inPos) {
  *
  * arg.target: Target to track
  * arg.targets: Targets to track
- * arg.targetX: Locked X position
  * arg.targetY: Locked Y position
  * arg.offsetX: X offset from tracked targets
  * arg.offsetY: Y offset from tracked targets
@@ -216,7 +228,6 @@ Camera.prototype.step = function() {
  *
  * arg.target: Target to track
  * arg.targets: Targets to track
- * arg.targetX: Locked X position
  * arg.targetY: Locked Y position
  * arg.offsetX: X offset from tracked targets
  * arg.offsetY: Y offset from tracked targets
@@ -227,6 +238,16 @@ Camera.prototype.set = function(arg) {
 	}
 	this._track.set(arg, this._leading + this._filter.leading);
 };
+
+/*
+ * Set the camera Y position.
+ *
+ * x0: The initial x position for the track
+ * y: Either a constant or an array of Y values
+ */
+Camera.prototype.setTrackY = function(x0, y) {
+	this._track.setTrackY(x0, y);
+}
 
 /*
  * Get the model view projection matrix.
