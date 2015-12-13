@@ -8,9 +8,9 @@
 var glm = require('gl-matrix');
 var vec2 = glm.vec2;
 
+var background = require('./background');
 var camera = require('./camera');
 var control = require('./control');
-var filter = require('./filter');
 var param = require('./param');
 var physics = require('./physics');
 var sprites = require('./sprites');
@@ -80,12 +80,8 @@ function Game() {
 		leading: g.Leading / g.Player.Speed,
 	});
 
-	this._bg = new filter.Filter({
-		shader: 'game_bg',
-		uniforms: 'Xform Grid Color',
-		func: this._bgUniforms,
-		target: this,
-	});
+	this._bg = new background.Background(this.camera);
+	this._bg.setGrid();
 
 	// Minimum dot product which is considered "ground"
 	this._groundThreshold = Math.cos(g.GroundAngle * (Math.PI / 180));
@@ -180,20 +176,6 @@ Game.prototype.isGrounded = function(body) {
  * Update the uniforms for the background.
  */
 Game.prototype._bgUniforms = function(r, p) {
-	var gl = r.gl;
-	var fovY = param.FovY, fovX = fovY * r.aspect;
-	var pos = this.camera.pos;
-	gl.uniform4fv(p.Xform, [
-		fovX / r.width, fovY / r.height,
-		pos[0] - fovX * 0.5, pos[1] - fovY * 0.5,
-	]);
-	gl.uniform2fv(p.Grid, [
-		0.1, 1 / 4,
-	]);
-	gl.uniform4fv(p.Color, [
-		0.2, 0.2, 0.2, 1.0,
-		0.3, 0.4, 0.5, 1.0,
-	]);
 };
 
 // We export through the state module.

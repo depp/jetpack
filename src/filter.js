@@ -7,68 +7,59 @@
 
 var shader = require('./shader');
 
-/*
- * Fullscreen shader layer.
- *
- * spec.shader: Fragment shader name (not including .frag extension)
- * uniforms: List of uniforms
- * func: Function to update uniforms (r, prog)
- * target: The 'this' argument for the function
- */
-function Filter(spec) {
-	this._progSpec = {
-		vert: 'fullscreen.vert',
-		frag: spec.shader + '.frag',
-		attributes: 'Pos',
-		uniforms: spec.uniforms,
-	};
-	this._prog = null;
-	this._vbuf = null;
-	this._func = spec.func;
-	this._target = spec.target;
-}
+// Fullscreen quad
+var FilterVData = new Float32Array([
+		-1.0, -1.0, +3.0, -1.0, -1.0, +3.0,
+]);
 
 /*
  * Initialize the filter.
  */
-Filter.prototype.init = function(r) {
+function filterInit(r) {
+	/*jshint validthis:true*/
+	if (this.prog) {
+		return;
+	}
 	var gl = r.gl;
-	this._prog = shader.loadProgram(gl, this._progSpec);
-	var vdata = new Float32Array([
-		// Fullscreen quad
-		-1.0, -1.0, +3.0, -1.0, -1.0, +3.0,
-	]);
+	this.prog = shader.loadProgram(gl, {
+		vert: 'fullscreen.vert',
+		frag: this.shader + '.frag',
+		attributes: 'Pos',
+		uniforms: this.uniforms,
+	});
 	this._vbuf = gl.createBuffer();
 	gl.bindBuffer(gl.ARRAY_BUFFER, this._vbuf);
-	gl.bufferData(gl.ARRAY_BUFFER, vdata, gl.STATIC_DRAW);
+	gl.bufferData(gl.ARRAY_BUFFER, FilterVData, gl.STATIC_DRAW);
 	gl.bindBuffer(gl.ARRAY_BUFFER, null);
-};
+}
 
 /*
  * Destroy the filter.
  */
-Filter.prototype.destroy = function(r) {
+function filterDestroy(r) {
+	/*jshint validthis:true*/
 	var gl = r.gl;
-	if (this._prog) {
-		gl.deleteProgram(this._prog.program);
+	if (this.prog) {
+		gl.deleteProgram(this.prog.program);
 	}
-	if (this._vbuf) {
-		gl.deleteBuffer(this._vbuf);
+	if (this.vbuf) {
+		gl.deleteBuffer(this.vbuf);
 	}
-};
+}
 
 /*
  * Render the filter.
  */
-Filter.prototype.render = function(r) {
-	var p = this._prog;
+function filterRender(r) {
+	/*jshint validthis:true*/
+	var p = this.prog;
 	if (!p) {
 		return;
 	}
 	var gl = r.gl;
 
 	gl.useProgram(p.program);
-	this._func.call(this._target, r, p);
+	this.updateUniforms(r);
 	gl.bindBuffer(gl.ARRAY_BUFFER, this._vbuf);
 	gl.enableVertexAttribArray(0);
 	gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 8, 0);
@@ -78,8 +69,32 @@ Filter.prototype.render = function(r) {
 	gl.disableVertexAttribArray(0);
 	gl.bindBuffer(gl.ARRAY_BUFFER, null);
 	gl.useProgram(null);
-};
+}
+
+/*
+ * Create a fullscreen shader layer.
+ *
+ * Modifies the argument and returns it.
+ *
+ * Existing properties:
+ * obj.shader: Fragment shader name, not including .frag extension
+ * obj.uniforms: List of shader uniforms
+ * obj.updateUniforms: Method to update program uniforms
+ *
+ * New properties:
+ * obj.prog: Shader program (has uniform locations as attributes)
+ * obj.init: Initialize filter
+ * obj.destroy: Destroy filter
+ * obj.render Render the filter
+ */
+function makeFilter(obj) {
+	obj.prog = null;
+	obj.init = filterInit;
+	obj.destroy = filterDestroy;
+	obj.render = filterRender;
+	return obj;
+}
 
 module.exports = {
-	Filter: Filter,
+	makeFilter: makeFilter,
 };
