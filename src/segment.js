@@ -48,7 +48,7 @@ function Border(x0, x1, y, isCeiling, isBuffer) {
 	this.y0 = y;
 	this.y1 = y;
 	this.isCeiling = isCeiling;
-	this.isBuffer = isBuffer;
+	this.isBuffer = !!isBuffer;
 }
 
 /*
