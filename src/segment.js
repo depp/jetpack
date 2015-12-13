@@ -10,16 +10,20 @@ var param = require('./param');
 var physics = require('./physics');
 var util = require('./util');
 
+var BufferFloorColor = color.rgb(0.2, 0.2, 0.2);
+var BufferCeilingColor = color.rgb(0.8, 0.8, 0.8);
+
 /*
  * Border: either a floor or a ceiling.
  */
-function Border(x0, x1, y, isCeiling) {
+function Border(x0, x1, y, isCeiling, isBuffer) {
 	this.x0 = x0;
 	this.x1 = x1;
 	this.y = y;
 	this.y0 = y;
 	this.y1 = y;
 	this.isCeiling = isCeiling;
+	this.isBuffer = isBuffer;
 }
 
 /*
@@ -56,8 +60,18 @@ Border.prototype.emitBody = function(world, yLimit) {
  */
 Border.prototype.emitTiles = function(tiles) {
 	var remW = Math.floor((1 + this.x1 - this.x0) * 0.5);
-	var state = Math.random() < 0.5 || remW <= 5;
 	var x = this.x0, y = this.y, dirY = this.isCeiling ? +1 : -1;
+	if (this.isBuffer) {
+		tiles.add([{
+			x: x + remW,
+			y: y + dirY,
+			w: remW * 2,
+			h: 2,
+			color: this.isCeiling ? BufferCeilingColor : BufferFloorColor,
+		}]);
+		return;
+	}
+	var state = Math.random() < 0.5 || remW <= 5;
 	var newTiles = [];
 	while (remW > 0) {
 		var tw = 0, th = 1;
@@ -108,24 +122,15 @@ Border.prototype.emitTiles = function(tiles) {
 function Segment(x0) {
 	var level = param.Level;
 	var y1 = level.MaxGap * 0.5, y0 = -y1;
-	var xp = x0 - level.BufferWidth;
 	this.x0 = x0;
-	this.floor = {
-		x: x0,
-		y: y0,
-		items: [new Border(xp, x0, y0, false)],
-	};
-	this.ceiling = {
-		x: x0,
-		y: y1,
-		items: [new Border(xp, x0, y1, true)],
-	};
+	this.floor = { x: x0, y: y0, items: [] };
+	this.ceiling = { x: x0, y: y1, items: [] };
 }
 
 /*
  * Add a border to the segment.
  */
-Segment.prototype.addBorder = function(y, x1, isCeiling) {
+Segment.prototype.addBorder = function(y, x1, isCeiling, isBuffer) {
 	if (typeof y != 'number' || !isFinite(y)) {
 		throw new TypeError('invalid Y');
 	}
@@ -137,10 +142,10 @@ Segment.prototype.addBorder = function(y, x1, isCeiling) {
 		console.error('Bad border');
 		return;
 	}
-	if (b.items.length > 1 && b.y == y) {
+	if (b.items.length > 1 && b.y == y && !isBuffer) {
 		b.items[b.items.length - 1].x1 = x1;
 	} else {
-		b.items.push(new Border(b.x, x1, y, isCeiling));
+		b.items.push(new Border(b.x, x1, y, isCeiling, isBuffer));
 	}
 	b.x = x1;
 	b.y = y;
@@ -459,10 +464,17 @@ Segment.prototype.emit = function(game) {
  * Create a random level segment.
  */
 function makeSegment() {
-	var seg = new Segment(0);
+	var w = param.Level.BufferWidth, x = -w / 2;
+	var seg = new Segment(x);
+	seg.addBorder(seg.floor.y, x + w, false, true);
+	seg.addBorder(seg.ceiling.y, x + w, true, true);
 	for (var j = 0; j < 10; j++) {
 		seg.addVaryingBorders();
 	}
+	x = seg.extendBorders();
+	var y0 = seg.floor.y, y1 = y0 + param.Level.MaxGap;
+	seg.addBorder(y0, x + w, false, true);
+	seg.addBorder(y1, x + w, true, true);
 	return seg;
 }
 
