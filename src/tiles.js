@@ -81,7 +81,6 @@ Tiles.prototype.render = function(r, camera) {
 			this.vdataU8.subarray(0, ATotal * 4 * this.count),
 			gl.STATIC_DRAW);
 		gl.bindBuffer(gl.ARRAY_BUFFER, null);
-		console.log(this.vdataF32);
 		this.vdirty = false;
 	}
 
@@ -131,16 +130,16 @@ Tiles.prototype.clear = function() {
 
 /*
  * Add tiles to the tile layer.
- * arg.x: X center coordinate
- * arg.y: Y center coordinate
- * arg.w: Width
- * arg.h: Height
- * arg.angle: Angle, in radians
+ * tile.x: X center coordinate
+ * tile.y: Y center coordinate
+ * tile.w: Width
+ * tile.h: Height
+ * tile.angle: Angle, in radians
  */
-Tiles.prototype.add = function() {
+Tiles.prototype.add = function(tiles) {
 	var i, vb, u8, f32, u32;
 
-	var count = this.count, newCount = count + arguments.length;
+	var count = this.count, newCount = count + tiles.length;
 	if (newCount > this.capacity) {
 		var newCapacity = Math.max(this.capacity, 32);
 		while (newCount > newCapacity) {
@@ -164,13 +163,13 @@ Tiles.prototype.add = function() {
 		u32 = this.vdataU32;
 	}
 
-	for (i = 0; i < arguments.length; i++) {
+	for (i = 0; i < tiles.length; i++) {
 		var j = 36 * (this.count + i);
-		var arg = arguments[i];
-		var x = arg.x, y = arg.y, w = arg.w, h = arg.h;
+		var tile = tiles[i];
+		var x = tile.x, y = tile.y, w = tile.w, h = tile.h;
 		var tx = Math.floor(1024 * Math.random() - 512);
 		var ty = Math.floor(1024 * Math.random() - 512);
-		var color = arg.color;
+		var color = tile.color;
 
 		f32[j+ 0] = x - w * 0.5;
 		f32[j+ 1] = y - h * 0.5;

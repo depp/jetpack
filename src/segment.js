@@ -6,6 +6,29 @@
 'use strict';
 
 var color = require('./color');
+var param = require('./param');
+
+function emitBorder(tiles, minX, maxX) {
+	var yoff = param.LevelY * 0.5 + 1;
+	var newTiles = [];
+	for (var i = 0; i < 2; i++) {
+		var isFloor = i === 0;
+		var y = isFloor ? -yoff : yoff, x = minX;
+		while (x < maxX) {
+			var tw = 2 + Math.floor(Math.random() * 9);
+			newTiles.push({
+				x: x + tw,
+				y: y,
+				w: tw * 2,
+				h: 2,
+				color: color.rgb(Math.random(), Math.random(), Math.random()),
+			});
+			x += tw * 2;
+		}
+	}
+	console.log(newTiles);
+	tiles.add(newTiles);
+}
 
 /*
  * A segment of a level.
@@ -19,15 +42,7 @@ function Segment() {
  */
 Segment.prototype.activate = function(game) {
 	game.tiles.clear();
-	for (var i = 0; i < 10; i++) {
-		game.tiles.add({
-			x: Math.random() * 60 - 30,
-			y: Math.random() * 20 - 10,
-			w: 2 * (1 + Math.floor(Math.random() * 5)),
-			h: 2 * (1 + Math.floor(Math.random() * 2)),
-			color: color.rgb(0, 0.5, 0),
-		});
-	}
+	emitBorder(game.tiles, -32, +32);
 };
 
 module.exports = {
