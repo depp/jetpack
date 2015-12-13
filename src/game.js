@@ -65,15 +65,15 @@ function Game() {
 		leading: g.Leading / g.Speed,
 	});
 
-	this._bg = new background.Background(this.camera);
-	this._bg.setGrid();
+	this.background = new background.Background(this.camera);
+	this.background.setGrid();
 }
 
 /*
  * Initialize the screen.
  */
 Game.prototype.init = function(r) {
-	this._bg.init(r);
+	this.background.init(r);
 	this.time = new time.Time(this, r.time);
 	control.game.enable();
 };
@@ -82,7 +82,7 @@ Game.prototype.init = function(r) {
  * Destroy the screen
  */
 Game.prototype.destroy = function(r) {
-	this._bg.destroy(r);
+	this.background.destroy(r);
 	control.game.disable();
 };
 
@@ -94,7 +94,7 @@ Game.prototype.render = function(r) {
 	this.time.update(r.time);
 	var frac = this.time.frac;
 	this.camera.update(r, frac);
-	this._bg.render(r);
+	this.background.render(r);
 	this.sprites.clear();
 	this.player.emit(this, frac);
 	this.sprites.draw(gl, this.camera.MVP);
@@ -110,12 +110,6 @@ Game.prototype.step = function(dt) {
 	this.player.step(this);
 	this.world.step(dt);
 	this.camera.step();
-};
-
-/*
- * Update the uniforms for the background.
- */
-Game.prototype._bgUniforms = function(r, p) {
 };
 
 // We export through the state module.
