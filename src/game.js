@@ -44,7 +44,7 @@ function Game() {
 	// Occupants
 	var shape;
 	this.bbody = new p2.Body({
-		mass: g.Player.Mass,
+		mass: g.Mass,
 		position: [0, 0],
 		fixedRotation: true,
 	});
@@ -77,7 +77,7 @@ function Game() {
 	this.camera = new camera.Camera({
 		target: this.bbody,
 		targetY: 0,
-		leading: g.Leading / g.Player.Speed,
+		leading: g.Leading / g.Speed,
 	});
 
 	this._bg = new background.Background(this.camera);
@@ -85,9 +85,9 @@ function Game() {
 
 	// Minimum dot product which is considered "ground"
 	this._groundThreshold = Math.cos(g.GroundAngle * (Math.PI / 180));
-	this._drag = g.Player.Drag;
-	this._jetForceUp = g.Player.Mass * g.Player.Jetpack;
-	this._jetForceForward = g.Player.Speed * g.Player.Speed * g.Player.Drag;
+	this._drag = g.Drag;
+	this._jetForceUp = g.Mass * g.Jetpack;
+	this._jetForceForward = g.Speed * g.Speed * g.Drag;
 }
 
 /*
