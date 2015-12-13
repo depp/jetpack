@@ -68,7 +68,7 @@ function Segment() {
  */
 Segment.prototype.activate = function(game) {
 	game.tiles.clear();
-	var height = param.LevelY * 0.5;
+	var height = param.LevelY;
 	var floor = height * -0.5, ceiling = height * 0.5;
 	emitBorder(game.tiles, -32, +128, -1, floor);
 	emitBorder(game.tiles, -32, +128, +1, ceiling);
