@@ -39,29 +39,10 @@ function Game() {
 	this.world = physics.createWorld();
 
 	// Occupants
-	this.segment = new segment.Segment();
-	this.segment.activate(this);
+	this.segment = segment.makeSegment();
+	this.segment.emit(this);
 	this.player = new player.Player();
 	this.world.addBody(this.player.body);
-
-	var shape;
-	this.plane0 = new p2.Body({
-		mass: 0,
-		position: [0, -16],
-	});
-	shape = new p2.Plane();
-	shape.material = physics.Material.World;
-	this.plane0.addShape(shape);
-	this.world.addBody(this.plane0);
-	this.plane1 = new p2.Body({
-		mass: 0,
-		position: [0, 16],
-		angle: Math.PI,
-	});
-	shape = new p2.Plane();
-	shape.material = physics.Material.World;
-	this.plane1.addShape(shape);
-	this.world.addBody(this.plane1);
 
 	physics.settle(this.world, 1 / param.Rate, 3.0);
 

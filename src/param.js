@@ -9,8 +9,6 @@ module.exports = {
 	// Physics update rate, in Hz.
 	Rate: 30,
 
-	// Height of level
-	LevelY: 32,
 	// Span of vertical field of view
 	FovY: 36,
 
@@ -44,5 +42,13 @@ module.exports = {
 		Friction: 0.5,
 		// Maximum angle, in degrees, which is considered "ground"
 		GroundAngle: 30,
+	},
+
+	// Level generation
+	Level: {
+		// Maximum height of the level
+		Height: 32,
+		// Width of buffer between segments
+		Buffer: 64,
 	},
 };
