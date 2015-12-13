@@ -157,12 +157,7 @@ Sprites.prototype.add = function() {
 		var r = arg.radius;
 		var x = arg.x, y = arg.y;
 		var x0 = x - r, x1 = x + r, y0 = y - r, y1 = y + r;
-		var color = arg.color | 0;
-		color =
-			((color >> 24) & 0x000000ff) |
-			((color >>  8) & 0x0000ff00) |
-			((color <<  8) & 0x00ff0000) |
-			((color << 24) & 0xff000000);
+		var color = arg.color;
 		this.vdata_pos.set([x0, y0, x1, y0, x0, y1, x1, y1], i * 8);
 		this.vdata_color.set([color, color, color, color], i * 4);
 	}

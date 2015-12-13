@@ -5,6 +5,7 @@
    terms of the MIT license.  See LICENSE.txt for details. */
 'use strict';
 
+var color = require('./color');
 var control = require('./control');
 var param = require('./param');
 var physics = require('./physics');
@@ -53,7 +54,12 @@ Player.prototype.step = function(game) {
  */
 Player.prototype.emit = function(game, frac) {
 	var pos = physics.bodyPos(this.body, frac);
-	game.sprites.add({ x: pos[0], y: pos[1], radius: 1.0, color: 0xff007fff });
+	game.sprites.add({
+		x: pos[0],
+		y: pos[1],
+		radius: 1.0,
+		color: color.rgb(1, 0, 0.5),
+	});
 };
 
 module.exports = {
