@@ -247,7 +247,7 @@ Camera.prototype.set = function(arg) {
  */
 Camera.prototype.setTrackY = function(x0, y) {
 	this._track.setTrackY(x0, y);
-}
+};
 
 /*
  * Get the model view projection matrix.
