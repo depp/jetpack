@@ -9,6 +9,11 @@ module.exports = {
 	// Physics update rate, in Hz.
 	Rate: 30,
 
+	// Height of level
+	LevelY: 32,
+	// Span of vertical field of view
+	FovY: 36,
+
 	// Maximum update interval, in s.  If this much time passes without
 	// an update, the game temporarily pauses.
 	MaxUpdateInterval: 0.5,

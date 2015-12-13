@@ -179,8 +179,6 @@ function Camera(arg) {
 	// Model view projection matrix
 	this._translate = glm.vec3.create();
 	this._proj = mat4.create();
-	this._proj[0] = 2/64;
-	this._proj[5] = 2/36;
 	this._mvp = mat4.create();
 
 	// Public results
@@ -233,9 +231,12 @@ Camera.prototype.set = function(arg) {
 /*
  * Get the model view projection matrix.
  */
-Camera.prototype.update = function(frac) {
+Camera.prototype.update = function(r, frac) {
 	vec2.lerp(this.pos, this._pos0, this._pos1, frac);
 	vec2.negate(this._translate, this.pos);
+	var fovY = param.FovY, fovX = r.aspect * fovY;
+	this._proj[0] = 2/fovX;
+	this._proj[5] = 2/fovY;
 	mat4.translate(this._mvp, this._proj, this._translate);
 	this.MVP = this._mvp;
 };

@@ -17,8 +17,6 @@ var sprites = require('./sprites');
 var state = require('./state');
 var time = require('./time');
 
-var FovY = 18;
-
 /*
  * Calculate the interpolated position of a body.
  */
@@ -120,7 +118,7 @@ Game.prototype.render = function(r) {
 	var gl = r.gl;
 	this.time.update(r.time);
 	var frac = this.time.frac;
-	this.camera.update(frac);
+	this.camera.update(r, frac);
 
 	this._bg.render(r);
 	this.sprites.clear();
@@ -183,14 +181,14 @@ Game.prototype.isGrounded = function(body) {
  */
 Game.prototype._bgUniforms = function(r, p) {
 	var gl = r.gl;
-	var fov_y = FovY, fov_x = fov_y * r.aspect;
+	var fovY = param.FovY, fovX = fovY * r.aspect;
 	var pos = this.camera.pos;
 	gl.uniform4fv(p.Xform, [
-		fov_x / r.width, fov_y / r.height,
-		pos[0] - fov_x * 0.5, pos[1] - fov_y * 0.5,
+		fovX / r.width, fovY / r.height,
+		pos[0] - fovX * 0.5, pos[1] - fovY * 0.5,
 	]);
 	gl.uniform2fv(p.Grid, [
-		0.1, 1 / 2,
+		0.1, 1 / 4,
 	]);
 	gl.uniform4fv(p.Color, [
 		0.2, 0.2, 0.2, 1.0,
