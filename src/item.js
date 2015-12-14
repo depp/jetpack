@@ -29,6 +29,9 @@ var Item = {
 		body.entity = this;
 		body.addShape(shape);
 		this.body = body;
+		game.tween(this)
+			.to({ color: color.rgb(1, 0, 0) }, 4.0)
+			.to({ color: this.color }, 4.0, 'SwiftOut');
 	},
 	emit: function(game) {
 		game.sprites.add({

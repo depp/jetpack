@@ -27,6 +27,7 @@ var sprites = require('./sprites');
 var state = require('./state');
 var tiles = require('./tiles');
 var time = require('./time');
+var tween = require('./tween');
 var util = require('./util');
 
 /*
@@ -37,6 +38,7 @@ function Game() {
 
 	// Timing manager
 	this.time = new time.Time(this);
+	this._tweens = [];
 
 	// Graphics layers
 	this.background = new background.Background();
@@ -137,7 +139,7 @@ Game.prototype.render = function(r) {
  * dt: The timestep, in s
  */
 Game.prototype.step = function(dt) {
-	var bodies = this.world.bodies, i, ents, e;
+	var bodies = this.world.bodies, i, ents, e, tws, tw, curTime;
 
 	if (this.camera._pos1[0] > this.buffers[1][0]) {
 		this.nextSegment();
@@ -159,6 +161,16 @@ Game.prototype.step = function(dt) {
 			entity.destroy(e.body);
 		} else if (e.step) {
 			e.step(this);
+		}
+	}
+
+	curTime = this.time.elapsed;
+	tws = this._tweens;
+	for (i = tws.length; i > 0; i--) {
+		tw = tws[i - 1];
+		tw.update(curTime);
+		if (tw.done) {
+			tws.splice(i - 1, 1);
 		}
 	}
 
@@ -213,6 +225,15 @@ Game.prototype._beginContact = function(evt) {
  */
 Game.prototype.spawn = function(args) {
 	entity.spawn(this, args);
+};
+
+/*
+ * Create a tween.
+ */
+Game.prototype.tween = function(target, props) {
+	var t = new tween.Tween(target, this.time.elapsed, props);
+	this._tweens.push(t);
+	return t;
 };
 
 // We export through the state module.
