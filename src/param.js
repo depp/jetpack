@@ -27,7 +27,7 @@ module.exports = {
 	// Game parameters
 	Game: {
 		// Gravity acceleration
-		Gravity: 75,
+		Gravity: 50,
 		// Distance to lead the player by, at full velocity
 		Leading: 2,
 		// Player mass
@@ -35,9 +35,9 @@ module.exports = {
 		// Air drag coefficient (must not be zero, or max speed is infinite)
 		Drag: 0.1,
 		// Maximum forward speed
-		Speed: 50,
+		Speed: 30,
 		// Jetpack acceleration
-		Jetpack: 150,
+		Jetpack: 100,
 		// Friction coefficient
 		Friction: 0.5,
 		// Maximum angle, in degrees, which is considered "ground"
