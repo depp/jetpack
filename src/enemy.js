@@ -27,7 +27,6 @@ var Enemy = {
 		var shape = new p2.Circle({ radius: this.radius });
 		shape.collisionGroup = physics.Mask.Enemy;
 		shape.collisionMask = physics.Mask.World | physics.Mask.Player;
-		body.entity = this;
 		body.addShape(shape);
 		this.body = body;
 	},

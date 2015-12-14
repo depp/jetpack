@@ -58,6 +58,7 @@ function spawn(game, args) {
 		console.warn('Could not spawn entity: ' + type);
 		return;
 	}
+	body.entity = obj;
 	if (!body.world) {
 		game.world.addBody(body);
 		// Workaround (might be a bug in p2.js...)

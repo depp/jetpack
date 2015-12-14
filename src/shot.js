@@ -67,7 +67,6 @@ var Explosion = {
 			shape.collisionMask = physics.Mask.Enemy;
 		}
 		setTeam(shape, args.isEnemy);
-		body.entity = this;
 		body.addShape(shape);
 		this.body = body;
 		this.state = 0;
@@ -157,7 +156,6 @@ var Shot = {
 		});
 		var shape = new p2.Circle({ radius: this.radius });
 		setTeam(shape, args.isEnemy);
-		body.entity = this;
 		body.addShape(shape);
 		this.isEnemy = !!args.isEnemy;
 		this.body = body;

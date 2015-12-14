@@ -35,7 +35,6 @@ var Player = {
 		shape.collisionMask = physics.Mask.World |
 			physics.Mask.Enemy | physics.Mask.Item;
 		body.addShape(shape);
-		body.entity = this;
 		this.body = body;
 		this._drag = g.Drag;
 		this._jetForceUp = g.Mass * g.Jetpack;

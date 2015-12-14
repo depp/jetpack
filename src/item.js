@@ -32,7 +32,6 @@ var Item = {
 		});
 		shape.collisionGroup = physics.Mask.Item;
 		shape.collisionMask = physics.Mask.Player;
-		body.entity = this;
 		body.addShape(shape);
 		this.body = body;
 		this.pos = vec2.create();
