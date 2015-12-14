@@ -5,9 +5,15 @@
    terms of the MIT license.  See LICENSE.txt for details. */
 'use strict';
 
+var glm = require('gl-matrix');
+var vec2 = glm.vec2;
+
 var color = require('./color');
 var entity = require('./entity');
 var physics = require('./physics');
+
+var BobPeriod = 2;
+var BobDistance = 1;
 
 /*
  * Base mixin for items.
@@ -29,13 +35,17 @@ var Item = {
 		body.entity = this;
 		body.addShape(shape);
 		this.body = body;
-		game.tween(this)
-			.to({ color: color.rgb(1, 0, 0) }, 4.0)
-			.to({ color: this.color }, 4.0, 'SwiftOut');
+		this.bob = -1;
+		game.tween(this, { loop: true })
+			.to({ bob: +1 }, 0.5 * BobPeriod, 'SineInOut')
+			.to({ bob: -1 }, 0.5 * BobPeriod, 'SineInOut');
+		this.pos = vec2.create();
 	},
 	emit: function(game) {
+		vec2.copy(this.pos, this.body.interpolatedPosition);
+		this.pos[1] += this.bob * (0.5 * BobDistance);
 		game.sprites.add({
-			position: this.body.interpolatedPosition,
+			position: this.pos,
 			radius: 3,
 			color: this.color,
 			sprite: 'IShield2',
