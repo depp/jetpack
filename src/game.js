@@ -115,6 +115,9 @@ Game.prototype.render = function(r) {
  * dt: The timestep, in s
  */
 Game.prototype.step = function(dt) {
+	var i;
+	this._killList = [];
+
 	if (!this.world) {
 		this.nextSegment(true);
 	} else {
@@ -122,11 +125,32 @@ Game.prototype.step = function(dt) {
 			this.nextSegment(false);
 		}
 	}
+
 	control.game.update();
 	this.player.step(this);
 	this.enemies.step(this);
+
+	var eqs = this.world.narrowphase.contactEquations;
+	for (i = 0; i < eqs.length; i++){
+		var eq = eqs[i];
+		var eA = eq.bodyA.entity, eB = eq.bodyB.entity;
+		if (eA) {
+			eA.collide(this, eq, eB);
+		}
+		if (eB) {
+			eB.collide(this, eq, eA);
+		}
+	}
+
 	this.world.step(dt);
 	this.camera.step();
+
+	for (i = 0; i < this._killList.length; i++) {
+		var b = this._killList[i];
+		if (b.world) {
+
+		}
+	}
 };
 
 /*

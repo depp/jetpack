@@ -11,6 +11,12 @@ var vec2 = glm.vec2;
 var color = require('./color');
 var physics = require('./physics');
 
+function destroy(body) {
+	if (body.world) {
+		body.world.removeBody(body);
+	}
+}
+
 /*
  * Base mixin for shots.
  *
@@ -91,6 +97,9 @@ var Shot = {
 			sprite: 'SRocket2',
 			angle: this.body.angle - Math.PI * 0.5,
 		});
+	},
+	collide: function(game, eq, other) {
+		destroy(this.body);
 	},
 	color: color.hex(0xffffff),
 	sprite: null,
