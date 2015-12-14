@@ -511,8 +511,8 @@ function makeSegment(game, type) {
 		// "Open style" / green - no obstacles, or almost none
 		seg.colors = Colors.Open;
 		seg.extendBorders(x + levelW);
-		for (var i = 0; i < 1; i++) {
-			game.spawn('Enemy.Silo', {
+		for (var i = 0; i < 5; i++) {
+			game.spawn('Enemy.Diamond', {
 				position: [x - i * 3 + 10, -5],
 			});
 		}

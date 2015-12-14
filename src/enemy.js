@@ -160,6 +160,40 @@ PeriodicFire.prototype.step = function() {
 	return true;
 };
 
+/**********************************************************************/
+
+function SporadicMover(period, speed, dist) {
+	this.rem = Math.ceil(Math.random() * period * param.Rate);
+	this.period = Math.ceil(period * param.Rate);
+	this.speed = speed;
+	this.invDist = 1 / dist;
+	this.target = vec2.create();
+	this.vel = vec2.create();
+	this.init = true;
+}
+SporadicMover.prototype.step = function(body) {
+	if (this.init) {
+		vec2.copy(this.target, body.position);
+		this.init = false;
+	}
+	var v = this.vel;
+	vec2.subtract(v, this.target, body.position);
+	var dist = vec2.length(v);
+	if (dist < 0.5) {
+		vec2.set(v, 0, 0, 0);
+	} else {
+		var speed = this.speed * Math.min(1, dist * this.invDist);
+		vec2.scale(v, v, speed / dist);
+	}
+	physics.adjustVelocity(body, v, 50);
+	if (this.rem-- <= 0) {
+		this.rem = this.period;
+		return true;
+	}
+};
+
+/**********************************************************************/
+
 var tempv0 = vec2.create();
 
 function drive(amt) {
@@ -228,12 +262,40 @@ Horiz.prototype = {
 	health: 2,
 };
 
-function Diamond() {}
+function Diamond() {
+	this.mover = new SporadicMover(1.0, 40, 25);
+	this.vert = true;
+}
 Diamond.prototype = {
 	color: color.hex(0x54EBB9),
 	sprite: 'EDiamond',
 	mass: 5,
 	health: 2,
+
+	step: function(game, ent) {
+		if (this.mover.step(ent.body)) {
+			if (this.vert) {
+				var y = this.mover.target[1], ny;
+				for (var i = 0; i < 8; i++) {
+					var mag = 8 + 8 * Math.random();
+					if (Math.random() < 0.5) {
+						ny = y - mag;
+					} else {
+						ny = y + mag;
+					}
+					if (Math.abs(ny) < 14) {
+						break;
+					}
+				}
+				this.mover.target[1] = ny;
+			} else {
+				this.mover.target[0] +=
+					(Math.random() > 0.5 ? -1 : +1) *
+					(Math.random() * 8 + 4);
+			}
+			this.vert = !this.vert;
+		}
+	},
 };
 
 function Star() {}
