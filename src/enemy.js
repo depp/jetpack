@@ -31,6 +31,7 @@ var Enemy = {
 		body.addShape(shape);
 		this.body = body;
 		game.world.addBody(body);
+		this.health = this.initialHealth;
 	},
 	emit: function(game) {
 		game.sprites.add({
@@ -41,10 +42,22 @@ var Enemy = {
 			angle: this.body.interpolatedAngle - Math.PI * 0.5,
 		});
 	},
+	onDamage: function(game, amt) {
+		console.log('DAMAGE', this.health);
+		if (this.initialHealth === 0) {
+			return;
+		}
+		this.health -= amt;
+		if (this.health <= 0) {
+			console.log('DESTROY');
+			entity.destroy(this.body);
+		}
+	},
 	color: color.hex(0xffffff),
 	sprite: 'PHurt',
 	mass: 5,
 	radius: 1,
+	initialHealth: 2,
 };
 
 var Enemies = {
