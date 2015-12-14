@@ -10,6 +10,7 @@ var vec2 = glm.vec2;
 
 var color = require('./color');
 var entity = require('./entity');
+var param = require('./param');
 var physics = require('./physics');
 var util = require('./util');
 
@@ -154,12 +155,22 @@ function Shot(game, args, type) {
 	this.isEnemy = !!args.isEnemy;
 	this.body = body;
 	this.type = type;
+	this._vec = dir;
 }
 Shot.prototype = {
 	step: function(game) {
-		if (this.type.guidance) {
-			this.type.guidance.step(game, this);
+		var t = this.type;
+		if (t.guidance) {
+			t.guidance.step(game, this);
 		}
+		/*
+		if (t.accel) {
+			var b = this.body;
+			vec2.set(this._vec, Math.cos(b.angle), Math.sin(b.angle));
+			vec2.scale(this._vec, this._vec, t.accel * t.mass);
+			b.applyForce(this._vec);
+		}
+		*/
 	},
 	emit: function(game) {
 		game.sprites.add({
@@ -220,21 +231,96 @@ ExplosivePayload.prototype = {
  */
 function Homing(game, args) {
 	this.hasTarget = false;
+	this.period = Math.ceil(param.Rate * 0.2);
+	this.rem = 0;
+	this.interceptAngle = null;
+	this._vec1 = vec2.create();
+	this._vec2 = vec2.create();
 }
 Homing.prototype = {
+	getTarget: function(game, shot) {
+		if (this.hasTarget) {
+			return shot.targetLock;
+		}
+		this.hasTarget = true;
+		var body = shot.body;
+		var target = game.scan({
+			team: shot.isEnemy ? 'player' : 'enemy',
+			position: body.position,
+			angel: body.angle,
+		});
+		if (target) {
+			shot.targetLock = target;
+			this.rem = 0;
+		}
+		return target;
+	},
+	calculateInterceptVector: function(body1, body2, speed) {
+		// vec1: Direction of target
+		vec2.subtract(this._vec1, body2.position, body1.position);
+		if (vec2.squaredLength(this._vec1) < 0.01) {
+			return null;
+		}
+		vec2.normalize(this._vec1, this._vec1);
+		// vec2: Perpendicular to direction of target
+		vec2.set(this._vec2, -this._vec2[1], this._vec2[0]);
+		// Velocity of target projected onto perp vector
+		var dperp = vec2.dot(this._vec2, body2.velocity);
+		// Magnitude of velocity
+		// var vmag = vec2.length(body1.velocity);
+		if (dperp >= speed * 0.9) {
+			// No intercept, just go straight towards target
+			return this._vec1;
+		}
+		var dpar = Math.sqrt(1 - dperp * dperp);
+		// Target velocity, assuming no speed changes
+		vec2.scale(this._vec1, this._vec1, dpar);
+		vec2.scale(this._vec2, this._vec2, dperp);
+		vec2.add(this._vec1, this._vec1, this._vec2);
+		return this._vec1;
+	},
+	getInterceptAngle: function(game, shot) {
+		var target = this.getTarget(game, shot);
+		if (!target) {
+			return null;
+		}
+		var vec = this.calculateInterceptVector(shot.body, target.body);
+		if (!vec) {
+			return null;
+		}
+		return Math.atan2(vec[1], vec[0]);
+	},
 	step: function(game, shot) {
-		if (!this.hasTarget) {
-			this.hasTarget = true;
-			var body = shot.body;
-			var target = game.scan({
-				team: shot.isEnemy ? 'player' : 'enemy',
-				position: body.position,
-				angel: body.angle,
-			});
-			if (target) {
-				shot.targetLock = target;
+		var speed = shot.type.speed;
+		this.rem--;
+		if (this.rem <= 0) {
+			this.rem = this.period;
+			this.interceptAngle = this.getInterceptAngle(game, shot);
+			if (false) {
+				console.log(
+					'Angle:' +
+						(this.interceptAngle !== null ?
+						 Math.round(this.interceptAngle * (180 / Math.PI)) : '<null>'));
 			}
 		}
+		if (this.interceptAngle !== null) {
+			var delta = (this.interceptAngle - shot.body.angle) % (Math.PI * 2);
+			if (delta > Math.PI) {
+				delta -= 2 * Math.PI;
+			} else if (delta < -Math.PI) {
+				delta += 2 * Math.PI;
+			}
+			var rate = 4 * (1 / param.Rate);
+			if (Math.abs(delta) > rate) {
+				delta = delta > 0 ? rate : -rate;
+			}
+			shot.body.angle += delta;
+		}
+		var a = shot.body.angle;
+		vec2.set(
+			shot.body.velocity,
+			Math.cos(a) * speed,
+			Math.sin(a) * speed);
 	},
 	emit: function(game, shot) {
 		var target = shot.targetLock;
@@ -276,7 +362,7 @@ function HomingMissile(game, args) {
 		payload: new ExplosivePayload(2),
 		color: color.hex(0xffffff),
 		sprite: 'SRocket2',
-		speed: 32,
+		speed: 50,
 	});
 }
 
