@@ -107,4 +107,8 @@ module.exports = {
 	tint: tint,
 	shade: shade,
 	tintShade: tintShade,
+
+	White: rgb(1, 1, 1),
+	Gray: rgb(0.5, 0.5, 0.5),
+	Black: rgb(0, 0, 0),
 };
