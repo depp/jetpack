@@ -343,6 +343,15 @@ Homing.prototype = {
 
 /**********************************************************************/
 
+function SlowBullet(game, args) {
+	return new Shot(game, args, {
+		payload: new SimplePayload(1),
+		color: color.hex(0xffffff),
+		sprite: 'SDot',
+		speed: 25,
+	});
+}
+
 function Bullet(game, args) {
 	return new Shot(game, args, {
 		payload: new SimplePayload(1),
@@ -384,6 +393,7 @@ function ItanoMissile(game, args) {
 /**********************************************************************/
 
 entity.registerTypes({
+	SlowBullet: SlowBullet,
 	Bullet: Bullet,
 	Rocket: Rocket,
 	HomingMissile: HomingMissile,

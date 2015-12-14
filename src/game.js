@@ -289,7 +289,7 @@ Game.prototype.spawnObj = function(ent) {
  * options.team: The team to search for
  * options.position: Position to start searching
  * options.direction: Direction to favor in search
-* options.angle
+ * options.angle
  */
 Game.prototype.scan = function(options) {
 	var team = this.teams[options.team];

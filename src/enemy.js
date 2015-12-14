@@ -13,8 +13,41 @@ var color = require('./color');
 var entity = require('./entity');
 var param = require('./param');
 var physics = require('./physics');
+var util = require('./physics');
 
 var StunTime = 0.3;
+
+var shotDir = vec2.create();
+
+function towardsPlayer(game, body, leading) {
+	if (isNaN(leading)) {
+		leading = 0.5;
+	}
+	var v = shotDir;
+	var player = game.scan({
+		team: 'player',
+		position: body.position,
+		angle: Math.PI,
+	});
+	if (!player || !player.body) {
+		return null;
+	}
+	var pb = player.body;
+	vec2.scale(v, pb.velocity, leading);
+	vec2.add(v, v, pb.position);
+	vec2.subtract(v, v, body.position);
+	var len2 = vec2.squaredLength(v);
+	if (len2 < 0.01) {
+		return null;
+	}
+	return v;
+}
+
+function randomDirection() {
+	var a = Math.random() * 2 * Math.PI;
+	vec2.set(shotDir, Math.cos(a), Math.sin(a));
+	return shotDir;
+}
 
 function emitEnemy(obj, game) {
 	var type = obj.type;
@@ -204,12 +237,38 @@ Silo.prototype = {
 	health: 5,
 };
 
-function Turret() {}
+function Turret() {
+	this.reset();
+}
 Turret.prototype = {
 	color: color.hex(0xAB8249),
 	sprite: 'ETurret',
-	mass: 0,
+	mass: 100,
 	health: 5,
+
+	period1: 1.5 * param.Rate,
+	period2: 0.5 * param.Rate,
+	count: 2,
+	reset: function() {
+		this.state = 0;
+		this.rem = Math.ceil((0.8 + 0.4 * Math.random()) * this.period1);
+	},
+	step: function(game, ent) {
+		this.rem--;
+		if (this.rem <= 0) {
+			this.state++;
+			if (this.state >= this.count) {
+				this.reset();
+			} else {
+				this.rem = Math.ceil(this.period2);
+			}
+			game.spawn('Shot.SlowBullet', {
+				source: ent.body,
+				direction: towardsPlayer(game, ent.body, 0.5) || randomDirection(),
+				isEnemy: true,
+			});
+		}
+	},
 };
 
 var Enemies = {

@@ -512,7 +512,7 @@ function makeSegment(game, type) {
 		seg.colors = Colors.Open;
 		seg.extendBorders(x + levelW);
 		for (var i = 0; i < 5; i++) {
-			game.spawn('Enemy.Glider', {
+			game.spawn('Enemy.Turret', {
 				position: [x - i * 3 + 10, -5],
 			});
 		}
