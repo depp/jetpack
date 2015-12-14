@@ -42,7 +42,6 @@ var Player = {
 		this._jetForceUp = g.Mass * g.Jetpack;
 		this._jetForceForward = g.Speed * g.Speed * g.Drag;
 		this._isFlying = false;
-		game.world.addBody(body);
 		game.camera.set({ target: body });
 	},
 	step: function(game) {

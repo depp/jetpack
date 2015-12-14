@@ -53,6 +53,16 @@ function spawn(game, args) {
 	var cls = Types[type];
 	var obj = Object.create(cls);
 	obj.spawn(game, args);
+	var body = obj.body;
+	if (!body) {
+		console.warn('Could not spawn entity: ' + type);
+		return;
+	}
+	if (!body.world) {
+		game.world.addBody(body);
+		// Workaround (might be a bug in p2.js...)
+		vec2.copy(body.previousPosition, body.position);
+	}
 	if ('initialHealth' in obj) {
 		obj.health = obj.initialHealth;
 	}

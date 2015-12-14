@@ -30,7 +30,6 @@ var Enemy = {
 		body.entity = this;
 		body.addShape(shape);
 		this.body = body;
-		game.world.addBody(body);
 	},
 	emit: function(game) {
 		game.sprites.add({

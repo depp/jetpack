@@ -69,7 +69,6 @@ var Explosion = {
 		setTeam(shape, args.isEnemy);
 		body.entity = this;
 		body.addShape(shape);
-		game.world.addBody(body);
 		this.body = body;
 		this.state = 0;
 	},
@@ -160,7 +159,6 @@ var Shot = {
 		setTeam(shape, args.isEnemy);
 		body.entity = this;
 		body.addShape(shape);
-		game.world.addBody(body);
 		this.isEnemy = !!args.isEnemy;
 		this.body = body;
 	},
