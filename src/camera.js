@@ -144,6 +144,7 @@ Filter.prototype.reset = function(inPos) {
 	for (var i = 0; i < this.order; i++) {
 		this.data.set(inPos, i * 2);
 	}
+	vec2.copy(this.pos, inPos);
 };
 
 /*
