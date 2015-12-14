@@ -136,17 +136,15 @@ Enemy.prototype = {
 
 /**********************************************************************/
 
-
 function PeriodicFire(delay, rate, count) {
 	this.delay = delay * param.Rate;
 	this.rate = rate * param.Rate;
 	this.count = count;
-	this.reset();
+	this.state =  0;
+	this.rem = Math.ceil(
+		delay * 0.5 +
+			Math.random() * (delay + rate * (count - 1) * param.Rate));
 }
-PeriodicFire.prototype.reset = function() {
-	this.state = 0;
-	this.rem = Math.ceil((0.8 + 0.4 * Math.random()) * this.delay);
-};
 PeriodicFire.prototype.step = function() {
 	this.rem--;
 	if (this.rem > 0) {
@@ -154,7 +152,8 @@ PeriodicFire.prototype.step = function() {
 	}
 	this.state++;
 	if (this.state >= this.count) {
-		this.reset();
+		this.state = 0;
+		this.rem = Math.ceil((0.8 + 0.4 * Math.random()) * this.delay);
 	} else {
 		this.rem = Math.ceil(this.rate);
 	}
@@ -253,12 +252,24 @@ Ace.prototype = {
 	health: 2,
 };
 
-function Silo() {}
+function Silo() {
+	this.pfire = new PeriodicFire(2.5, 0.5, 1);
+}
 Silo.prototype = {
 	color: color.hex(0xA7A4B3),
 	sprite: 'ESilo',
-	mass: 0,
+	mass: 100,
 	health: 5,
+
+	step: function(game, ent) {
+		if (this.pfire.step()) {
+			game.spawn('Shot.SlowHoming', {
+				source: ent.body,
+				angle: ent.body.angle,
+				isEnemy: true,
+			});
+		}
+	},
 };
 
 function Turret() {

@@ -174,15 +174,16 @@ Shot.prototype = {
 		*/
 	},
 	emit: function(game) {
+		var t = this.type;
 		game.sprites.add({
 			position: this.body.interpolatedPosition,
 			radius: 1.5,
-			color: this.type.color,
-			sprite: this.type.sprite,
+			color: t.color,
+			sprite: t.sprite,
 			angle: this.body.interpolatedAngle - Math.PI * 0.5,
 		});
-		if (this.type.guidance) {
-			this.type.guidance.emit(game, this);
+		if (t.guidance && !this.isEnemy) {
+			t.guidance.emit(game, this);
 		}
 	},
 	onContact: function(game, eq, body) {
@@ -390,6 +391,16 @@ function ItanoMissile(game, args) {
 	});
 }
 
+function SlowHoming(game, args) {
+	return new Shot(game, args, {
+		guidance: new Homing(4),
+		payload: new ExplosivePayload(2, 4),
+		color: color.hex(0xffffff),
+		sprite: 'SRocket2',
+		speed: 20,
+	});
+}
+
 /**********************************************************************/
 
 entity.registerTypes({
@@ -397,5 +408,6 @@ entity.registerTypes({
 	Bullet: Bullet,
 	Rocket: Rocket,
 	HomingMissile: HomingMissile,
+	SlowHoming: SlowHoming,
 	ItanoMissile: ItanoMissile,
 }, 'Shot');
