@@ -95,7 +95,6 @@ var Explosion = {
 		body.addShape(shape);
 		game.world.addBody(body);
 		this.body = body;
-		console.log('SPAWN EXPLOSION');
 	},
 	emit: function(game, frac) {
 		var pos = physics.bodyPos(this.body, frac);
@@ -112,7 +111,6 @@ var Explosion = {
 		impactVector(impulse, this.body, body, 50, 0.2);
 		randomInBody(point, body);
 		body.applyImpulse(impulse, body);
-		console.log('HIT');
 	},
 };
 
