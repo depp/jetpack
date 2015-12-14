@@ -36,11 +36,12 @@ var Item = {
 		body.addShape(shape);
 		this.body = body;
 		this.pos = vec2.create();
+		this.bobShift = Math.random() * (Math.PI * 2);
 	},
 	emit: function(game) {
 		vec2.copy(this.pos, this.body.interpolatedPosition);
 		this.pos[1] += (0.5 * BobDistance) *
-			Math.sin(game.time.elapsed * (2 * Math.PI / BobPeriod));
+			Math.sin(game.time.elapsed * (2 * Math.PI / BobPeriod) + this.bobShift);
 		game.sprites.add({
 			position: this.pos,
 			radius: 3,
