@@ -244,11 +244,51 @@ var Enemy = {
 	radius: 1,
 };
 
+/*
+ * Base mixin for items.
+ */
+var Item = {
+	spawn: function(game, args) {
+		var position = args.position;
+		var body = new p2.Body({
+			position: args.position,
+			mass: this.mass,
+			fixedRotation: true,
+		});
+		var shape = new p2.Circle({
+			radius: 3,
+			sensor: true,
+		});
+		shape.collisionGroup = physics.Mask.Item;
+		shape.collisionMask = physics.Mask.Player;
+		body.entity = this;
+		body.addShape(shape);
+		this.body = body;
+		game.world.addBody(body);
+	},
+	emit: function(game, frac) {
+		var pos = physics.bodyPos(this.body, frac);
+		game.sprites.add({
+			x: pos[0],
+			y: pos[1],
+			radius: 3,
+			color: this.color,
+			sprite: 'IShield2',
+		});
+	},
+	onContact: function(game, eq, body) {
+		console.log('PICKUP');
+	},
+	color: color.hex(0xffffff),
+	sprite: 'PHurt',
+};
+
 // Index of all types.
 var Types = {
 	Explosion: Explosion,
 	Shot: Shot,
 	Enemy: Enemy,
+	Item: Item,
 };
 
 /*

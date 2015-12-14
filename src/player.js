@@ -27,7 +27,8 @@ function Player(args) {
 	var shape = new p2.Circle({ radius: 1 });
 	shape.material = physics.Material.Player;
 	shape.collisionGroup = physics.Mask.Player;
-	shape.collisionMask = physics.Mask.World | physics.Mask.Enemy;
+	shape.collisionMask = physics.Mask.World |
+		physics.Mask.Enemy | physics.Mask.Item;
 	this.body.addShape(shape);
 
 	this._drag = g.Drag;

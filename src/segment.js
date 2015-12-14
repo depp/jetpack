@@ -519,6 +519,10 @@ function makeSegment(game, type) {
 				position: [x - i * 3, 5],
 			});
 		}
+		game.spawn({
+			type: 'Item',
+			position: [x + 30, 0],
+		});
 		break;
 
 	case 1:
