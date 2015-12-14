@@ -14,6 +14,12 @@ var Easing = {
 	Linear: function(t) {
 		return t;
 	},
+	SineIn: function(t) {
+		return 1 - Math.cos(0.5 * Math.PI * t);
+	},
+	SineOut: function(t) {
+		return Math.sin(Math.PI * 0.5 * t);
+	},
 	SineInOut: function(t) {
 		return -0.5 * (Math.cos(Math.PI * t) - 1);
 	},
