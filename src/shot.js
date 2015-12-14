@@ -60,17 +60,18 @@ var Explosion = {
 			sensor: true,
 		});
 		if (args.isEnemy) {
-			shape.collisionGroup = physics.Mask.Player;
-			shape.collisionMask = physics.Mask.Enemy;
-		} else {
 			shape.collisionGroup = physics.Mask.Enemy;
 			shape.collisionMask = physics.Mask.Player;
+		} else {
+			shape.collisionGroup = physics.Mask.Player;
+			shape.collisionMask = physics.Mask.Enemy;
 		}
 		setTeam(shape, args.isEnemy);
 		body.entity = this;
 		body.addShape(shape);
 		game.world.addBody(body);
 		this.body = body;
+		this.state = 0;
 	},
 	emit: function(game) {
 		game.sprites.add({
@@ -81,10 +82,20 @@ var Explosion = {
 		});
 	},
 	onContact: function(game, eq, body) {
+		var e = body.entity;
+		if (e && e.onDamage) {
+			e.onDamage(game, 1);
+		}
 		var impulse = vec2.create(), point = vec2.create();
 		impactVector(impulse, this.body, body, 50, 0.2);
-		util.randomInBody(point, body);
-		body.applyImpulse(impulse, body);
+		util.randomInCircle(point, body.boundingRadius);
+		body.applyImpulse(impulse, point);
+	},
+	step: function(game) {
+		this.state++;
+		if (this.state === 2) {
+			this.onContact = null;
+		}
 	},
 };
 

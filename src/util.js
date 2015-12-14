@@ -55,22 +55,37 @@ function randInt(min, max) {
 
 /*
  * Create a random vector selected uniformly from a circle.
+ *
+ * radius: default 1
+ * center: default origin
  */
-function randomInCircle(vec, center, radius) {
+function randomInCircle(vec, radius, center) {
 	var x, y;
 	do {
 		x = 2 * Math.random() - 1;
 		y = 2 * Math.random() - 1;
 	} while (x * x + y * y > 1);
-	vec[0] = x * radius + center[0];
-	vec[1] = x * radius + center[1];
+	if (typeof radius != 'undefined') {
+		x *= radius;
+		y *= radius;
+	}
+	if (typeof center != 'undefined') {
+		x += center[0];
+		y += center[1];
+	}
+	vec[0] = x;
+	vec[1] = y;
 }
 
 /*
  * Create a random vector in the bounding radius of a body.
  */
-function randomInBody(vec, body) {
-	randomInCircle(vec, body.position, body.boundingRadius);
+function randomInBody(vec, body, scale) {
+	var radius = body.boundingRadius;
+	if (typeof scale != 'undefined') {
+		radius *= scale;
+	}
+	randomInCircle(vec, radius, body.position);
 }
 
 module.exports = {
