@@ -101,7 +101,6 @@ var Enemy = {
 	},
 	mass: 5,
 	radius: 1,
-	initialHealth: 4,
 };
 
 var Enemies = {
@@ -110,24 +109,22 @@ var Enemies = {
 			color: color.hex(0xDCE800),
 			sprite: 'EGlider',
 		},
+		mass: 2,
+		initialHealth: 2,
 	},
 	Horiz: {
 		sprite: {
 			color: color.hex(0x1C72FC),
 			sprite: 'EHoriz',
 		},
-	},
-	Silo: {
-		sprite: {
-			color: color.hex(0xA7A4B3),
-			sprite: 'ESilo',
-		},
+		initialHealth: 2,
 	},
 	Diamond: {
 		sprite: {
 			color: color.hex(0x54EBB9),
 			sprite: 'EDiamond',
 		},
+		initialHealth: 2,
 	},
 	Star: {
 		sprite: {
@@ -141,14 +138,24 @@ var Enemies = {
 			sprite: 'EAce',
 		},
 	},
+	Silo: {
+		sprite: {
+			color: color.hex(0xA7A4B3),
+			sprite: 'ESilo',
+		},
+		mass: 0,
+		initialHealth: 5,
+	},
 	Turret: {
 		sprite: {
 			color: color.hex(0xAB8249),
 			sprite: 'ETurret',
 		},
+		mass: 0,
+		initialHealth: 5,
 	},
 };
 
-entity.registerTypes({
-	Enemy: Enemy
-});
+_.forOwn(Enemies, function(value) { value.inherit = [Enemy]; });
+
+entity.registerTypes(Enemies, 'Enemy');
