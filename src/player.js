@@ -52,6 +52,8 @@ Player.prototype.addToWorld = function(world, offset) {
 	});
 	var shape = new p2.Circle({ radius: 1 });
 	shape.material = physics.Material.Player;
+	shape.collisionGroup = physics.Mask.Player;
+	shape.collisionMask = physics.Mask.World | physics.Mask.Enemy;
 	this.body.addShape(shape);
 	world.addBody(this.body);
 };
@@ -75,6 +77,12 @@ Player.prototype.step = function(game) {
 		fx += this._jetForceForward;
 	}
 	this.body.applyForce([fx, fy]);
+	if (ctl.fire.press) {
+		game.spawn({
+			type: 'Shot',
+			source: this.body,
+		});
+	}
 };
 
 /*

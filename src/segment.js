@@ -11,6 +11,12 @@ var param = require('./param');
 var physics = require('./physics');
 var util = require('./util');
 
+function initShape(s) {
+	s.collisionGroup = physics.Mask.World;
+	s.collisionMask = physics.Mask.Player | physics.Mask.Enemy;
+	s.material = physics.Material.World;
+}
+
 function tweakColor(c) {
 	var tint = 0.2 * Math.random();
 	var shade = 0.2 * Math.random();
@@ -73,7 +79,7 @@ Border.prototype.emitBody = function(world, yLimit) {
 		width: x1 - x0,
 		height: y1 - y0,
 	});
-	shape.material = physics.Material.World;
+	initShape(shape);
 	var body = new p2.Body({
 		position: [(x0 + x1) * 0.5, (y0 + y1) * 0.5],
 	});
@@ -446,7 +452,7 @@ Segment.prototype.emit = function(game) {
 		position: [0, y],
 	});
 	shape = new p2.Plane();
-	shape.material = physics.Material.World;
+	initShape(shape);
 	body.addShape(shape);
 	world.addBody(body);
 	_.forEach(this.floor.items, function(it) { it.emitBody(world, y); });
@@ -457,7 +463,7 @@ Segment.prototype.emit = function(game) {
 		angle: Math.PI,
 	});
 	shape = new p2.Plane();
-	shape.material = physics.Material.World;
+	initShape(shape);
 	body.addShape(shape);
 	world.addBody(body);
 	 _.forEach(this.ceiling.items, function(it) { it.emitBody(world, y); });

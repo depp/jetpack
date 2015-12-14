@@ -11,6 +11,7 @@ var vec2 = glm.vec2;
 var background = require('./background');
 var camera = require('./camera');
 var control = require('./control');
+var entity = require('./entity');
 var lights = require('./lights');
 var param = require('./param');
 var physics = require('./physics');
@@ -92,8 +93,15 @@ Game.prototype.render = function(r) {
 	this.camera.update(r, frac);
 	this.sprites.clear();
 	this.lights.clearLocal();
-	this.player.emit(this, frac);
 	this.enemies.emit(this, frac);
+	var b = this.world.bodies, i;
+	for (i = 0; i < b.length; i++) {
+		var e = b[i].entity;
+		if (e) {
+			e.emit(this, frac);
+		}
+	}
+	this.player.emit(this, frac);
 	this.lights.update(this.camera);
 
 	this.background.render(r, this.camera);
@@ -147,6 +155,13 @@ Game.prototype.nextSegment = function(isFirst) {
 		this.background.addOffset(offset);
 		this.camera.addOffset(offset);
 	}
+};
+
+/*
+ * Spawn an entity.
+ */
+Game.prototype.spawn = function(args) {
+	entity.spawn(this, args);
 };
 
 // We export through the state module.

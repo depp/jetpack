@@ -28,6 +28,27 @@ var Contact = [
 ];
 
 /*
+ * Collision masks
+ */
+var Mask = {
+	// The world and obstacles
+	World: 1,
+	// The player and player shots
+	Player: 2,
+	// The enemy and enemy shots
+	Enemy: 4,
+	// Items
+	Item: 8,
+};
+
+/*
+	World mask: Player | Enemy
+	Player mask: World | Enemy
+	Enemy mask: World | Enemy
+	Item mask: Player
+*/
+
+/*
  * Calculate the interpolated position of a body.
  */
 function bodyPos(body, frac) {
@@ -124,6 +145,7 @@ function isGrounded(world, body) {
 
 module.exports = {
 	Material: Material,
+	Mask: Mask,
 	bodyPos: bodyPos,
 	createWorld: createWorld,
 	settle: settle,
