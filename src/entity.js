@@ -59,11 +59,19 @@ function spawn(game, args) {
 			return;
 		}
 		type = Types[type];
-	} else if (typeof type != 'object' || !type) {
+	}
+
+	/* jshint newcap: false */
+	var obj;
+	if (typeof type == 'function') {
+		obj = new type(game, args);
+	} else if (typeof type == 'object' && type) {
+		obj = Object.create(type);
+		obj.spawn(game, args);
+	} else {
 		throw new TypeError('Bad entity type');
 	}
-	var obj = Object.create(type);
-	obj.spawn(game, args);
+
 	var body = obj.body;
 	if (!body) {
 		console.warn('Could not spawn entity');
