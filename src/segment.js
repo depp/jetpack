@@ -512,7 +512,7 @@ function makeSegment(game, type) {
 		seg.colors = Colors.Open;
 		seg.extendBorders(x + levelW);
 		for (var i = 0; i < 5; i++) {
-			game.spawn('Enemy.Diamond', {
+			game.spawn('Enemy.Star', {
 				position: [x - i * 3 + 10, -5],
 			});
 		}

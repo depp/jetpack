@@ -263,7 +263,7 @@ Horiz.prototype = {
 };
 
 function Diamond() {
-	this.mover = new SporadicMover(1.0, 40, 25);
+	this.mover = new SporadicMover(0.9, 60, 25);
 	this.vert = true;
 }
 Diamond.prototype = {
@@ -298,12 +298,21 @@ Diamond.prototype = {
 	},
 };
 
-function Star() {}
+function Star() {
+	this.mover = new SporadicMover(1.0, 40, 25);
+}
 Star.prototype = {
 	color: color.hex(0xFFF8C4),
 	sprite: 'EStar',
 	mass: 5,
 	health: 2,
+
+	step: function(game, ent) {
+		if (this.mover.step(ent.body)) {
+			this.mover.target[0] += 10 * (2 * Math.random() - 1);
+			this.mover.target[1] = 14 * (2 * Math.random() - 1);
+		}
+	},
 };
 
 function Ace() {}
