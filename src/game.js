@@ -213,10 +213,15 @@ Game.prototype.nextSegment = function() {
 	// Figure out which bodies to keep
 	var bodies = this.world.bodies, i, b, e, keep = [];
 	var keepMinX = this.buffers[1][0] - param.Level.BufferWidth * 0.5 - 10;
+	var keepMaxX = this.buffers[1][0] + param.Level.BufferWidth * 0.5;
 	for (i = 0; i < bodies.length; i++) {
 		b = bodies[i];
 		e = b.entity;
-		if (e && (e.alwaysKeep || b.position[0] >= keepMinX)) {
+		if (!e) {
+			continue;
+		}
+		if (e.alwaysKeep ||
+				(b.position[0] >= keepMinX && b.position[0] <= keepMaxX)) {
 			keep.push(b);
 		}
 	}
