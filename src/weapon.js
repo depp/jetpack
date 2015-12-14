@@ -25,6 +25,13 @@ function forwardDir(r, y) {
 	return shotDir;
 }
 
+function randomDir() {
+	var a =  2 * Math.PI * Math.random();
+	shotDir[0] = Math.cos(a);
+	shotDir[1] = Math.sin(a);
+	return shotDir;
+}
+
 /**************************************/
 
 function WeaponType(sprite, name, ctor) {
@@ -180,7 +187,6 @@ createType({
 });
 
 createType({
-	debug: true,
 	name: 'Homing Missiles',
 	tier: 1,
 	sprite: 'WHoming',
@@ -195,17 +201,35 @@ createType({
 	},
 });
 
-if (false) {
 createType({
-	sprite: 'WItano',
+	debug: true,
 	name: 'Itano Battery',
 	tier: 2,
-	disabled: true,
+	sprite: 'WItano',
+	init: function(game, player) {
+		this.action = new ActionAuto(15);
+		this.angle = Math.random() * 2 * Math.PI;
+		this.a0 = Math.PI * 0.1;
+		this.a1 = Math.PI * 0.2;
+	},
+	fire: function(game) {
+		var d = shotDir;
+		d[0] = Math.cos(this.angle);
+		d[1] = Math.sin(this.angle);
+		this.angle =
+			(this.angle + this.a1 + Math.random() * (this.a1 - this.a0)) %
+			(2 * Math.PI);
+		game.spawn('Shot.ItanoMissile', {
+			source: this.source,
+			direction: d,
+		});
+	},
 });
 
 /**********************************************************************/
 /* Laser */
 
+if (false)
 createType({
 	sprite: 'WSingle',
 	name: 'Laser Cannon',
@@ -213,6 +237,7 @@ createType({
 	disabled: true,
 });
 
+if (false)
 createType({
 	sprite: 'WReaper',
 	name: 'Reaper Laser',
@@ -223,6 +248,7 @@ createType({
 /**********************************************************************/
 /* Other */
 
+if (false)
 createType({
 	sprite: 'WSnake',
 	name: 'S.N.A.K.E. Launcher',
@@ -230,13 +256,14 @@ createType({
 	disabled: true,
 });
 
+if (false)
 createType({
 	sprite: 'WWave',
 	name: 'Giga Wave Cannon',
 	tier: 2,
 	disabled: true,
 });
-}
+
 /**********************************************************************/
 
 /*

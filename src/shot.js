@@ -371,10 +371,21 @@ function HomingMissile(game, args) {
 	});
 }
 
+function ItanoMissile(game, args) {
+	return new Shot(game, args, {
+		guidance: new Homing(4),
+		payload: new ExplosivePayload(1),
+		color: color.hex(0xffffff),
+		sprite: 'SRocket1',
+		speed: 50,
+	});
+}
+
 /**********************************************************************/
 
 entity.registerTypes({
 	Bullet: Bullet,
 	Rocket: Rocket,
 	HomingMissile: HomingMissile,
+	ItanoMissile: ItanoMissile,
 }, 'Shot');
