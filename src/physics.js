@@ -16,6 +16,7 @@ var GroundThreshold = Math.cos(param.Game.GroundAngle * (Math.PI / 180));
 var Material = {
 	World: new p2.Material(),
 	Player: new p2.Material(),
+	Bouncy: new p2.Material(),
 };
 
 /*
@@ -24,6 +25,9 @@ var Material = {
 var Contact = [
 	new p2.ContactMaterial(Material.Player, Material.World, {
 		friction: param.Game.Friction,
+	}),
+	new p2.ContactMaterial(Material.Bouncy, Material.World, {
+		restitution: 0.4,
 	}),
 ];
 
