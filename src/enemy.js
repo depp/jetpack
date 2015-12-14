@@ -6,11 +6,23 @@
 'use strict';
 
 var color = require('./color');
+var physics = require('./physics');
 
-// Enemy base class.
-function Enemy(type) {
+function Enemy() {}
 
-}
+/*
+ * Emit the sprite for an enemy.
+ */
+Enemy.prototype.emitSprite = function(game, frac) {
+	var pos = this.position;
+	game.sprites.add({
+		x: pos[0],
+		y: pos[1],
+		radius: 1.5,
+		sprite: this.sprite,
+		color: this.color,
+	});
+};
 
 // Mapping from type names to types.
 var Types = {
@@ -38,15 +50,18 @@ var Types = {
 };
 
 _.forOwn(Types, function(value, key) {
-	value.color = color.hex(value.color);
-	value.sprite = 'E' + key;
+	var e = Object.create(Enemy.prototype);
+	_.assign(e, value);
+	e.color = color.hex(e.color);
+	e.sprite = 'E' + key;
+	Types[key] = e;
 });
 
 /*
  * Enemy manager.
  */
 function Enemies() {
-	this._spawn = [];
+	this._enemies = [];
 }
 
 /*
@@ -57,14 +72,14 @@ function Enemies() {
  * obj.type: Enemy type
  */
 Enemies.prototype.spawn = function(obj) {
-	if (typeof obj != 'object') {
-		throw new TypeError('Invalid spawn');
-	}
 	if (!Types.hasOwnProperty(obj.type)) {
 		console.warn('No such enemy type: ' + obj.type);
 		return;
 	}
-	this._spawn.push(obj);
+	var type = Types[obj.type];
+	var e = Object.create(type);
+	e.position = [obj.x, obj.y];
+	this._enemies.push(e);
 };
 
 /*
@@ -78,17 +93,9 @@ Enemies.prototype.step = function(game) {
  * Emit graphics data.
  */
 Enemies.prototype.emit = function(game, frac) {
-	var i, sp = this._spawn;
-	for (i = 0; i < sp.length; i++) {
-		var e = sp[i];
-		var info = Types[e.type];
-		game.sprites.add({
-			x: e.x,
-			y: e.y,
-			radius: 1.5,
-			sprite: info.sprite,
-			color: info.color,
-		});
+	var i, es = this._enemies;
+	for (i = 0; i < es.length; i++) {
+		es[i].emitSprite(game, frac);
 	}
 };
 
