@@ -8,6 +8,11 @@
 var glm = require('gl-matrix');
 var vec2 = glm.vec2;
 
+// Load all entity types
+require('./enemy');
+require('./item');
+require('./shot');
+
 var background = require('./background');
 var camera = require('./camera');
 var control = require('./control');

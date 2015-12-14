@@ -5,6 +5,9 @@
    terms of the MIT license.  See LICENSE.txt for details. */
 'use strict';
 
+var glm = require('gl-matrix');
+var vec2 = glm.vec2;
+
 /*
  * Utility functions.
  *
@@ -50,7 +53,49 @@ function randInt(min, max) {
 	return min + Math.floor(Math.random() * (1 + max - min));
 }
 
+/*
+ * Create a random vector selected uniformly from a circle.
+ */
+function randomInCircle(vec, center, radius) {
+	var x, y;
+	do {
+		x = 2 * Math.random() - 1;
+		y = 2 * Math.random() - 1;
+	} while (x * x + y * y > 1);
+	vec[0] = x * radius + center[0];
+	vec[1] = x * radius + center[1];
+}
+
+/*
+ * Create a random vector in the bounding radius of a body.
+ */
+function randomInBody(vec, body) {
+	randomInCircle(vec, body.position, body.boundingRadius);
+}
+
+/*
+ * Calculate an impact vector between the origin body and the target body.
+ */
+function impactVector(vec, source, target, scale, jitter) {
+	var angle = Math.random() * 2 * Math.PI;
+	var c = Math.cos(angle), s = Math.sin(angle);
+	vec2.subtract(vec, target.position, source.position);
+	vec[0] += c * jitter;
+	vec[1] += s * jitter;
+	var len2 = vec2.squaredLength(vec);
+	if (len2 < 0.01) {
+		vec[0] = c * scale;
+		vec[1] = s * scale;
+	} else {
+		var a = scale / Math.sqrt(len2);
+		vec[0] *= a;
+		vec[1] *= a;
+	}
+}
+
 module.exports = {
 	genIndexArray: genIndexArray,
 	randInt: randInt,
+	randomInCircle: randomInCircle,
+	randomInBody: randomInBody,
 };

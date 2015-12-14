@@ -6,100 +6,80 @@
 'use strict';
 
 var color = require('./color');
+var entity = require('./entity');
 var physics = require('./physics');
 
-function Enemy() {}
-
 /*
- * Emit the sprite for an enemy.
+ * Base mixin for enemies.
+ *
+ * Spawn properties:
+ * position: Enemy position
  */
-Enemy.prototype.emitSprite = function(game, frac) {
-	var pos = this.position;
-	game.sprites.add({
-		x: pos[0],
-		y: pos[1],
-		radius: 1.5,
-		sprite: this.sprite,
-		color: this.color,
-	});
+var Enemy = {
+	spawn: function(game, args) {
+		var position = args.position;
+		var body = new p2.Body({
+			position: args.position,
+			angle: Math.PI * 0.5,
+			mass: this.mass,
+			gravityScale: 0,
+		});
+		var shape = new p2.Circle({ radius: this.radius });
+		shape.collisionGroup = physics.Mask.Enemy;
+		shape.collisionMask = physics.Mask.World | physics.Mask.Player;
+		body.entity = this;
+		body.addShape(shape);
+		this.body = body;
+		game.world.addBody(body);
+	},
+	emit: function(game, frac) {
+		var pos = physics.bodyPos(this.body, frac);
+		game.sprites.add({
+			x: pos[0],
+			y: pos[1],
+			radius: 1.5,
+			color: this.color,
+			sprite: this.sprite,
+			angle: this.body.angle - Math.PI * 0.5,
+		});
+	},
+	color: color.hex(0xffffff),
+	sprite: 'PHurt',
+	mass: 5,
+	radius: 1,
 };
 
-// Mapping from type names to types.
-var Types = {
+var Enemies = {
 	Glider: {
-		color: 0xDCE800,
+		color: color.hex(0xDCE800),
+		sprite: 'EGlider',
 	},
 	Horiz: {
-		color: 0x1C72FC,
+		color: color.hex(0x1C72FC),
+		sprite: 'EHoriz',
 	},
 	Silo: {
-		color: 0xA7A4B3,
+		color: color.hex(0xA7A4B3),
+		sprite: 'ESilo',
 	},
 	Diamond: {
-		color: 0x54EBB9,
+		color: color.hex(0x54EBB9),
+		sprite: 'EDiamond',
 	},
 	Star: {
-		color: 0xFFF8C4,
+		color: color.hex(0xFFF8C4),
+		sprite: 'EStar',
 	},
 	Ace: {
-		color: 0xCB30FF,
+		color: color.hex(0xCB30FF),
+		sprite: 'EAce',
 	},
 	Turret: {
-		color: 0xAB8249,
+		color: color.hex(0xAB8249),
+		sprite: 'ETurret',
 	},
 };
 
-_.forOwn(Types, function(value, key) {
-	var e = Object.create(Enemy.prototype);
-	_.assign(e, value);
-	e.color = color.hex(e.color);
-	e.sprite = 'E' + key;
-	Types[key] = e;
+entity.registerTypes(null, {
+	Enemy: Enemy
 });
-
-/*
- * Enemy manager.
- */
-function Enemies() {
-	this._enemies = [];
-}
-
-/*
- * Create an enemy spawn point.
- *
- * obj.x: X position
- * obj.y: Y position
- * obj.type: Enemy type
- */
-Enemies.prototype.spawn = function(obj) {
-	if (!Types.hasOwnProperty(obj.type)) {
-		console.warn('No such enemy type: ' + obj.type);
-		return;
-	}
-	var type = Types[obj.type];
-	var e = Object.create(type);
-	e.position = [obj.x, obj.y];
-	this._enemies.push(e);
-};
-
-/*
- * Advance the simulation by one frame.
- */
-Enemies.prototype.step = function(game) {
-
-};
-
-/*
- * Emit graphics data.
- */
-Enemies.prototype.emit = function(game, frac) {
-	var i, es = this._enemies;
-	for (i = 0; i < es.length; i++) {
-		es[i].emitSprite(game, frac);
-	}
-};
-
-module.exports = {
-	Enemies: Enemies,
-	Types: _.keys(Types),
-};
