@@ -123,10 +123,9 @@ Game.prototype.render = function(r) {
  */
 Game.prototype.step = function(dt) {
 	var i;
-	this._killList = [];
 
 	if (this.camera._pos1[0] > this.buffers[1][0]) {
-		this.nextSegment(false);
+		this.nextSegment();
 	}
 
 	control.game.update();
