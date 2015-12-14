@@ -365,7 +365,7 @@ Turret.prototype = {
 
 var Enemies = {
 	Glider: Glider,
-	Horiz: Horiz,
+	// Horiz: Horiz,
 	Diamond: Diamond,
 	Star: Star,
 	// Ace: Ace, unimplemented
