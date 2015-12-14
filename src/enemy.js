@@ -137,6 +137,30 @@ Enemy.prototype = {
 /**********************************************************************/
 
 
+function PeriodicFire(delay, rate, count) {
+	this.delay = delay * param.Rate;
+	this.rate = rate * param.Rate;
+	this.count = count;
+	this.reset();
+}
+PeriodicFire.prototype.reset = function() {
+	this.state = 0;
+	this.rem = Math.ceil((0.8 + 0.4 * Math.random()) * this.delay);
+};
+PeriodicFire.prototype.step = function() {
+	this.rem--;
+	if (this.rem > 0) {
+		return false;
+	}
+	this.state++;
+	if (this.state >= this.count) {
+		this.reset();
+	} else {
+		this.rem = Math.ceil(this.rate);
+	}
+	return true;
+};
+
 var tempv0 = vec2.create();
 
 function drive(amt) {
@@ -238,7 +262,7 @@ Silo.prototype = {
 };
 
 function Turret() {
-	this.reset();
+	this.pfire = new PeriodicFire(1.5, 0.5, 2);
 }
 Turret.prototype = {
 	color: color.hex(0xAB8249),
@@ -246,22 +270,8 @@ Turret.prototype = {
 	mass: 100,
 	health: 5,
 
-	period1: 1.5 * param.Rate,
-	period2: 0.5 * param.Rate,
-	count: 2,
-	reset: function() {
-		this.state = 0;
-		this.rem = Math.ceil((0.8 + 0.4 * Math.random()) * this.period1);
-	},
 	step: function(game, ent) {
-		this.rem--;
-		if (this.rem <= 0) {
-			this.state++;
-			if (this.state >= this.count) {
-				this.reset();
-			} else {
-				this.rem = Math.ceil(this.period2);
-			}
+		if (this.pfire.step()) {
 			game.spawn('Shot.SlowBullet', {
 				source: ent.body,
 				direction: towardsPlayer(game, ent.body, 0.5) || randomDirection(),
