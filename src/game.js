@@ -324,13 +324,15 @@ Game.prototype.scan = function(options) {
 	var best = team.length > 1 ? _.min(team, evaluate) : team[0];
 	var value = evaluate(best);
 	if (!isFinite(value) && value > 0) {
-		console.log('Nothing found (scanned: ' + team.length + ')');
+		if (false) {
+			console.log('Nothing found (scanned: ' + team.length + ')');
+		}
 		return null;
 	}
 	// console.log('Found value = ' + value);
 	if (best.team == 'enemy') {
 		if (!best.hasOwnProperty('lockCount')) {
-			log.error('no lock count');
+			console.error('no lock count');
 		} else {
 			best.lockCount++;
 		}
