@@ -228,14 +228,17 @@ ExplosivePayload.prototype = {
 
 /*
  * Component for shots that home in on targets.
+ *
+ * turnSpeed: Maximum rate of turning (radians / sec)
  */
-function Homing(game, args) {
+function Homing(turnSpeed) {
 	this.hasTarget = false;
 	this.period = Math.ceil(param.Rate * 0.2);
 	this.rem = 0;
 	this.interceptAngle = null;
 	this._vec1 = vec2.create();
 	this._vec2 = vec2.create();
+	this.turnSpeed = turnSpeed;
 }
 Homing.prototype = {
 	getTarget: function(game, shot) {
@@ -310,7 +313,7 @@ Homing.prototype = {
 			} else if (delta < -Math.PI) {
 				delta += 2 * Math.PI;
 			}
-			var rate = 4 * (1 / param.Rate);
+			var rate = this.turnSpeed * (1 / param.Rate);
 			if (Math.abs(delta) > rate) {
 				delta = delta > 0 ? rate : -rate;
 			}
@@ -358,7 +361,7 @@ function Rocket(game, args) {
 
 function HomingMissile(game, args) {
 	return new Shot(game, args, {
-		guidance: new Homing(game, args),
+		guidance: new Homing(4),
 		payload: new ExplosivePayload(2),
 		color: color.hex(0xffffff),
 		sprite: 'SRocket2',
