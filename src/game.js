@@ -289,7 +289,7 @@ Game.prototype.spawnObj = function(ent) {
 Game.prototype.scan = function(options) {
 	var team = this.teams[options.team];
 	if (team.length === 0) {
-		console.log('Nothing to scan for');
+		// console.log('Nothing to scan for');
 		return null;
 	}
 
