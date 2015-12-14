@@ -46,16 +46,20 @@ function registerTypes(category, types) {
  */
 function spawn(game, args) {
 	var type = args.type;
-	if (!Types.hasOwnProperty(type)) {
-		console.warn('No such entity type: ' + type);
-		return;
+	if (typeof type == 'string') {
+		if (!Types.hasOwnProperty(type)) {
+			console.warn('No such entity type: ' + type);
+			return;
+		}
+		type = Types[type];
+	} else if (typeof type != 'object' || !type) {
+		throw new TypeError('Bad entity type');
 	}
-	var cls = Types[type];
-	var obj = Object.create(cls);
+	var obj = Object.create(type);
 	obj.spawn(game, args);
 	var body = obj.body;
 	if (!body) {
-		console.warn('Could not spawn entity: ' + type);
+		console.warn('Could not spawn entity');
 		return;
 	}
 	body.entity = obj;
