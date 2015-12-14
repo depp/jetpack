@@ -12,6 +12,7 @@ var vec4 = glm.vec4;
 var color = require('./color');
 var entity = require('./entity');
 var physics = require('./physics');
+var weapon = require('./weapon');
 
 var ItemSize = 3;
 var BobPeriod = 2;
@@ -32,9 +33,9 @@ var Corpse = {
 	spawn: function(game, args) {
 		var base = args.base;
 		this.body = base.body;
-		this.sprite = base.sprite;
+		this.sprite = base.type.sprite;
 		this.bobShift = base.bobShift;
-		this.color = vec4.clone(base.color);
+		this.color = vec4.clone(base.type.color);
 		this.radius = 3;
 		_.forEach(this.body.shapes, function(s) {
 			s.contactGroup = 0;
@@ -52,14 +53,45 @@ var Corpse = {
 			position: getBobPos(this, game),
 			radius: this.radius,
 			color: this.color,
-			sprite: 'IShield2',
+			sprite: this.sprite,
 		});
 	},
 	lifetime: 0.3,
 };
 
 /*
- * Base mixin for items.
+ * Types of items we can pick up.
+ */
+var Items = {
+	Weapon: {
+		init: function(game) {
+			var tier = Math.random() < 0.3 ? 2 : 1;
+			this.weapon = weapon.getWeapon(tier);
+			console.log(this.weapon);
+			this.sprite = this.weapon.sprite;
+		},
+		color: color.White,
+	},
+	Shield: {
+		init: function(game) {},
+		color: color.White,
+	},
+	Bonus: {
+		init: function(game) {},
+		color: color.White,
+	},
+	Death: {
+		init: function(game) {},
+		color: color.Black,
+	},
+	Speed: {
+		init: function(game) {},
+		color: color.White,
+	},
+};
+
+/*
+ * Class for items we can pick up.
  */
 var Item = {
 	spawn: function(game, args) {
@@ -78,13 +110,17 @@ var Item = {
 		body.addShape(shape);
 		this.body = body;
 		this.bobShift = Math.random() * (Math.PI * 2);
+		var category = Items.Weapon;
+		var type = Object.create(category);
+		type.init(game);
+		this.type = type;
 	},
 	emit: function(game) {
 		game.sprites.add({
 			position: getBobPos(this, game),
 			radius: ItemSize,
-			color: this.color,
-			sprite: 'IShield2',
+			color: this.type.color,
+			sprite: this.type.sprite,
 		});
 	},
 	onContact: function(game, eq, body) {
@@ -94,8 +130,6 @@ var Item = {
 			base: this,
 		});
 	},
-	color: color.hex(0xffffff),
-	sprite: 'PHurt',
 };
 
 entity.registerTypes({
