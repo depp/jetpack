@@ -38,7 +38,7 @@ function Game() {
 
 	// Timing manager
 	this.time = new time.Time(this);
-	this._tweens = [];
+	this._tweens = new tween.TweenManager();
 
 	// Graphics layers
 	this.background = new background.Background();
@@ -106,16 +106,12 @@ Game.prototype.render = function(r) {
 	var gl = r.gl;
 	this.time.update(r.time);
 	var frac = this.time.frac;
-	var bodies = this.world.bodies, i, b, e, tws, curTime;
+	var bodies = this.world.bodies, i, b, e, curTime;
 
 	this.sprites.clear();
 	this.lights.clearLocal();
+	this._tweens.update(this.time.elapsed);
 
-	curTime = this.time.elapsed;
-	tws = this._tweens;
-	for (i = 0; i < tws.length; i++) {
-		tws[i].update(curTime);
-	}
 
 	// If we relied on p2.js to manage update timing, then it would
 	// interpolate the positions for us.  We do it ourselves because
@@ -145,13 +141,16 @@ Game.prototype.render = function(r) {
  * dt: The timestep, in s
  */
 Game.prototype.step = function(dt) {
-	var bodies = this.world.bodies, i, ents, e, tws;
+	var bodies = this.world.bodies, i, ents, e;
 
 	if (this.camera._pos1[0] > this.buffers[1][0]) {
 		this.nextSegment();
 	}
 
 	control.game.update();
+
+	this._tweens.prune(function(e) { return e.body && e.body.world; });
+	this._tweens.updateTime(this.time.elapsed);
 
 	ents = [];
 	for (i = 0; i < bodies.length; i++) {
@@ -167,15 +166,6 @@ Game.prototype.step = function(dt) {
 			entity.destroy(e.body);
 		} else if (e.step) {
 			e.step(this);
-		}
-	}
-
-	tws = this._tweens;
-	for (i = tws.length; i > 0; i--) {
-		e = tws[i - 1].target;
-		if (!e.body || !e.body.world) {
-			console.log('Killed a tween');
-			tws.splice(i - 1, 1);
 		}
 	}
 
@@ -238,10 +228,8 @@ Game.prototype.spawn = function(args) {
  * target: Entity to modify (must be an entity!)
  * props: Options ('loop' is one)
  */
-Game.prototype.tween = function(target, props) {
-	var t = new tween.Tween(this.time, 'elapsed', target, props);
-	this._tweens.push(t);
-	return t;
+Game.prototype.tween = function() {
+	return this._tweens.tween.apply(this._tweens, arguments);
 };
 
 // We export through the state module.

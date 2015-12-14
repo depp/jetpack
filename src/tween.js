@@ -96,41 +96,137 @@ function copy(value) {
 }
 
 /*
+ * Manager for tweens.
+ */
+function TweenManager() {
+	this._tweens = [];
+	this._time = 0;
+}
+
+/*
+ * Remove all tweens.
+ */
+TweenManager.prototype.clear = function() {
+	this._tweens = [];
+};
+
+/*
+ * Prune tweens whose objects don't match the predicate.
+ */
+TweenManager.prototype.prune = function(func, thisArg) {
+	var tws = this._tweens, i, tw;
+	for (i = tws.length; i > 0; i--) {
+		tw = tws[i - 1];
+		if (!func.call(thisArg, tw._target)) {
+			// console.log('Killed a live tween');
+			tws.splice(i - 1, 1);
+		}
+	}
+};
+
+/*
+ * Update the current time without updating the tweens.
+ */
+TweenManager.prototype.updateTime = function(time) {
+	this._time = time;
+};
+
+/*
+ * Update all tweens.
+ */
+TweenManager.prototype.update = function(time) {
+	this._time = time;
+	var tws = this._tweens, i, tw;
+	for (i = tws.length; i > 0; i--) {
+		tw = tws[i - 1];
+		tw._update(time);
+		if (!tw.running) {
+			// console.log('Killed a dead tween');
+			tws.splice(i - 1, 1);
+		}
+	}
+};
+
+/*
+ * Create a new tween.
+ */
+TweenManager.prototype.tween = function(target, props) {
+	return new Tween(this, target, props);
+};
+
+/*
  * Automatically updated tween.
  *
  * target: The object to modify
  * curTime: The current time
  * options: Tween options (only 'loop' is an option)
  */
-function Tween(timeObj, timeProp, target, props) {
-	this._timeObj = timeObj;
-	this._timeProp = timeProp;
-	this.target = target;
-	this.done = true;
-	this._segs = [];
-	this._vals = {};
-	this._funcs = {};
-	this._time = 0;
-	this._loop = false;
+function Tween(mgr, target, props) {
+	this._mgr = mgr;
+	this._target = target;
 	this.reset(props);
 }
 
 /*
- * Update the tween.
+ * Reset the tween.
  */
-Tween.prototype.update = function(time) {
-	if (this.done) {
+Tween.prototype.reset = function(props) {
+	if (this.running) {
+		this.update(this._mgr._time);
+	}
+	this.running = false;
+	this._index = 0;     // current segment
+	this._segs = [];     // tween segments
+	this._vals = {};     // copies of latest target properties
+	this._funcs = {};    // functions for interpolating target properties
+	this._startTime = 0; // timestamp of starting time
+	this._totalTime = 0; // length, in seconds
+	this._loop = props && !!props.loop;
+	return this;
+};
+
+/*
+ * Start running the tween.
+ */
+Tween.prototype.start = function() {
+	if (this.running) {
 		return;
 	}
-	var t, key, done, target = this.target;
-	while (this._segs.length > 0) {
-		var seg = this._segs[0];
-		if (time < seg.t0) {
+	this.running = true;
+	this._index = 0;
+	this._startTime = this._mgr._time;
+	this._mgr._tweens.push(this);
+	return this;
+};
+
+/*
+ * Update the tween.
+ */
+Tween.prototype._update = function(time) {
+	if (!this._segs.length) {
+		this.running = false;
+		return;
+	}
+	var relTime = time - this._startTime;
+	var t, key, done, target = this._target;
+	while (true) {
+		if (this._index >= this._segs.length) {
+			if (this._loop) {
+				this._index = 0;
+				this._startTime += this._totalTime;
+				relTime -= this._totalTime;
+			} else {
+				this.running = false;
+				return;
+			}
+		}
+		var seg = this._segs[this._index];
+		if (relTime < seg.t0) {
 			return;
 		}
-		if (time < seg.t1) {
+		if (relTime < seg.t1) {
 			if (seg.easeFunc) {
-				t = seg.easeFunc((time - seg.t0) / (seg.t1 - seg.t0));
+				t = seg.easeFunc((relTime - seg.t0) / (seg.t1 - seg.t0));
 				for (key in seg.v1) {
 					target[key] = this._funcs[key](
 						target[key], seg.v0[key], seg.v1[key], t);
@@ -147,36 +243,8 @@ Tween.prototype.update = function(time) {
 		if (seg.callback) {
 			seg.callback(target);
 		}
-		this._segs.shift();
-		if (this._loop) {
-			var dt = this._time - seg.t0;
-			seg.t0 += dt;
-			seg.t1 += dt;
-			this._time = seg.t1;
-			this._segs.push(seg);
-		}
+		this._index++;
 	}
-	this.done = true;
-	this._segs = [];
-	this._vals = {};
-	this._funcs = {};
-};
-
-/*
- * Reset the tween.
- */
-Tween.prototype.reset = function(props) {
-	var curTime = this._timeObj[this._timeProp];
-	if (!this.done) {
-		this.update(curTime);
-	}
-	this.done = false;
-	this._segs = [];
-	this._vals = {};
-	this._funcs = {};
-	this._time = curTime;
-	this._loop = props && !!props.loop;
-	return this;
 };
 
 /*
@@ -186,9 +254,9 @@ Tween.prototype.wait = function(duration) {
 	if (isNaN(duration)) {
 		duration = 0;
 	}
-	var t0 = this._time, t1 = Math.max(t0, t0 + duration);
+	var t0 = this._totalTime, t1 = Math.max(t0, t0 + duration);
 	this._segs.push({ t0: t0, t1: t1 });
-	this._time = t1;
+	this._totalTime = t1;
 	return this;
 };
 
@@ -205,11 +273,11 @@ Tween.prototype.to = function(props, duration, ease) {
 		value = copy(value);
 		if (this._vals.hasOwnProperty(key)) {
 			v0[key] = this._vals[key];
-		} else if (key in this.target) {
-			curValue = this.target[key];
-			if (!this.target.hasOwnProperty(key)) {
+		} else if (key in this._target) {
+			curValue = this._target[key];
+			if (!this._target.hasOwnProperty(key)) {
 				console.warn('Warning: tweening an inherited property');
-				this.target[key] = copy(curValue);
+				this._target[key] = copy(curValue);
 			}
 			this._funcs[key] = interpolator(curValue);
 			v0[key] = copy(curValue);
@@ -232,7 +300,7 @@ Tween.prototype.to = function(props, duration, ease) {
 		v0 = null;
 		easeFunc = null;
 	}
-	var t0 = this._time, t1 = Math.max(t0, t0 + duration);
+	var t0 = this._totalTime, t1 = Math.max(t0, t0 + duration);
 	this._segs.push({
 		t0: t0,
 		t1: t1,
@@ -241,10 +309,10 @@ Tween.prototype.to = function(props, duration, ease) {
 		duration: duration,
 		easeFunc: easeFunc,
 	});
-	this._time = t1;
+	this._totalTime = t1;
 	return this;
 };
 
 module.exports = {
-	Tween: Tween,
+	TweenManager: TweenManager,
 };
