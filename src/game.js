@@ -73,7 +73,7 @@ Game.prototype.init = function(r) {
 };
 
 /*
- * Destroy the screen
+y * Destroy the screen
  */
 Game.prototype.destroy = function(r) {
 	this.background.destroy(r);
@@ -110,7 +110,7 @@ Game.prototype.step = function(dt) {
 	if (!this.world) {
 		this.nextSegment(true);
 	} else {
-		if (this.camera.pos[0] > this.buffers[1][0]) {
+		if (this.camera._pos1[0] > this.buffers[1][0]) {
 			this.nextSegment(false);
 		}
 	}
