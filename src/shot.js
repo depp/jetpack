@@ -72,6 +72,7 @@ function Explosion(game, args) {
 	body.addShape(shape);
 	this.body = body;
 	this.state = 0;
+	this.damage = args.damage;
 }
 Explosion.prototype = {
 	emit: function(game) {
@@ -85,7 +86,7 @@ Explosion.prototype = {
 	onContact: function(game, eq, body) {
 		var e = body.entity;
 		if (e && e.onDamage) {
-			e.onDamage(game, 1);
+			e.onDamage(game, this.damage);
 		}
 		var impulse = vec2.create(), point = vec2.create();
 		impactVector(impulse, this.body, body, 50, 0.2);
@@ -211,9 +212,9 @@ SimplePayload.prototype = {
 /*
  * Component for shots that explode on contact.
  */
-function ExplosivePayload(shot, damage) {
-	this.shot = shot;
+function ExplosivePayload(damage, radius) {
 	this.damage = damage;
+	this.radius = radius;
 }
 ExplosivePayload.prototype = {
 	onContact: function(game, eq, body, shot) {
@@ -221,6 +222,7 @@ ExplosivePayload.prototype = {
 			position: shot.body.position,
 			isEnemy: shot.isEnemy,
 			damage: this.damage,
+			radius: this.radius,
 		}));
 		entity.destroy(shot.body);
 	},
@@ -352,7 +354,7 @@ function Bullet(game, args) {
 
 function Rocket(game, args) {
 	return new Shot(game, args, {
-		payload: new ExplosivePayload(2),
+		payload: new ExplosivePayload(2, 4),
 		color: color.hex(0xffffff),
 		sprite: 'SRocket2',
 		speed: 45,
@@ -362,7 +364,7 @@ function Rocket(game, args) {
 function HomingMissile(game, args) {
 	return new Shot(game, args, {
 		guidance: new Homing(4),
-		payload: new ExplosivePayload(2),
+		payload: new ExplosivePayload(2, 4),
 		color: color.hex(0xffffff),
 		sprite: 'SRocket2',
 		speed: 50,
