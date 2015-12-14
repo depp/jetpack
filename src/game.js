@@ -105,7 +105,6 @@ Game.prototype.render = function(r) {
 	var frac = this.time.frac;
 	var bodies = this.world.bodies, i, b, e;
 
-	this.camera.update(r, frac);
 	this.sprites.clear();
 	this.lights.clearLocal();
 
@@ -124,8 +123,8 @@ Game.prototype.render = function(r) {
 		e.emit(this);
 	}
 
+	this.camera.update(r, frac);
 	this.lights.update(this.camera);
-
 	this.background.render(r, this.camera);
 	this.tiles.render(r, this.camera, this.lights);
 	this.sprites.render(r, this.camera);
