@@ -76,7 +76,7 @@ var Explosion = {
 		game.sprites.add({
 			position: this.body.interpolatedPosition,
 			radius: 3.0,
-			color: 0xffffffff,
+			color: color.White,
 			sprite: 'SStar',
 		});
 	},
