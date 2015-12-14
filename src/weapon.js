@@ -159,17 +159,27 @@ createType({
 	},
 });
 
-if (false) {
-
 /**********************************************************************/
 /* Rockets */
 
 createType({
-	sprite: 'WRocket',
 	name: 'Rocket Launcher',
 	tier: 1,
-	disabled: true,
+	sprite: 'WRocket',
+	init: function(game, player) {
+		this.action = new ActionAuto(5);
+	},
+	fire: function(game) {
+		game.spawn({
+			type: 'Shot.Rocket',
+			source: this.source,
+			direction: forwardDir(0.1),
+		});
+	},
 });
+
+if (false) {
+
 
 createType({
 	sprite: 'WHoming',

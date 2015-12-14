@@ -221,6 +221,7 @@ var Rocket = {
 	inherit: [Shot, PayloadExplosion],
 	color: color.hex(0xffffff),
 	sprite: 'SRocket2',
+	speed: 45,
 };
 
 entity.registerTypes({
