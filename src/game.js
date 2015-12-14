@@ -151,8 +151,8 @@ Game.prototype.step = function(dt) {
 			ents.push(e);
 		}
 	}
-	for (i = 0; i< ents.length; i++) {
-		e.step(this);
+	for (i = 0; i < ents.length; i++) {
+		ents[i].step(this);
 	}
 	this.world.step(dt);
 	this.camera.step();
