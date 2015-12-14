@@ -513,7 +513,7 @@ function makeSegment(game, type) {
 		seg.extendBorders(x + levelW);
 		for (var i = 0; i < 5; i++) {
 			game.spawn('Enemy.Glider', {
-				position: [x - i * 3, -5],
+				position: [x - i * 3 + 10, -5],
 			});
 		}
 		game.spawn('Item.Weapon', {

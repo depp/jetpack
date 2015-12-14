@@ -6,11 +6,15 @@
 'use strict';
 
 var glm = require('gl-matrix');
+var vec2 = glm.vec2;
 var vec4 = glm.vec4;
 
 var color = require('./color');
 var entity = require('./entity');
+var param = require('./param');
 var physics = require('./physics');
+
+var StunTime = 0.3;
 
 function emitEnemy(obj, game) {
 	var type = obj.type;
@@ -70,6 +74,9 @@ function Enemy(game, args, type) {
 	this.lockCount = 0;
 }
 Enemy.prototype = {
+	step: function(game) {
+		this.type.step(game, this);
+	},
 	emit: function(game) {
 		emitEnemy(this, game);
 	},
@@ -82,7 +89,7 @@ Enemy.prototype = {
 			this.hurtTween =
 				(this.hurtTween ? this.hurtTween.reset() : game.tween(this))
 				.to({ color: color.White }, 0.1)
-				.to({ color: this.type.color, hurtTween: null }, 0.3)
+				.to({ color: this.type.color, hurtTween: null }, StunTime)
 				.start();
 		} else {
 			this.die(game);
@@ -94,63 +101,131 @@ Enemy.prototype = {
 	team: 'enemy',
 };
 
-var Enemies = {
-	Glider: function (game, args) {
-		return new Enemy(game, args, {
-			color: color.hex(0xDCE800),
-			sprite: 'EGlider',
-			mass: 2,
-			health: 2,
-		});
-	},
-	Horiz: function(game, args) {
-		return new Enemy(game, args, {
-			color: color.hex(0x1C72FC),
-			sprite: 'EHoriz',
-			mass: 5,
-			health: 2,
-		});
-	},
-	Diamond: function(game, args) {
-		return new Enemy(game, args, {
-			color: color.hex(0x54EBB9),
-			sprite: 'EDiamond',
-			mass: 5,
-			health: 2,
-		});
-	},
-	Star: function(game, args) {
-		return new Enemy(game, args, {
-			color: color.hex(0xFFF8C4),
-			sprite: 'EStar',
-			mass: 5,
-			health: 2,
-		});
-	},
-	Ace: function(game, args) {
-		return new Enemy(game, args, {
-			color: color.hex(0xCB30FF),
-			sprite: 'EAce',
-			mass: 5,
-			health: 2,
-		});
-	},
-	Silo: function(game, args) {
-		return new Enemy(game, args, {
-			color: color.hex(0xA7A4B3),
-			sprite: 'ESilo',
-			mass: 0,
-			health: 5,
-		});
-	},
-	Turret: function(game, args) {
-		return new Enemy(game, args, {
-			color: color.hex(0xAB8249),
-			sprite: 'ETurret',
-			mass: 0,
-			health: 5,
-		});
+/**********************************************************************/
+
+
+var tempv0 = vec2.create();
+
+function drive(amt) {
+	return 1 - Math.pow(1 - amt, 1 / param.Rate);
+}
+
+function Glider() {
+	// up, left, down, left
+	this.state = 0;
+	this.period = Math.round(0.75 * param.Rate);
+	this.rem = 0;
+	var a = Math.atan(this.slope), h = Math.PI;
+	this.angles = [h - a, h, h + a, h];
+}
+Glider.prototype = {
+	color: color.hex(0xDCE800),
+	sprite: 'EGlider',
+	mass: 2,
+	health: 2,
+	drive: drive(0.7),
+
+	slope: 3,
+	speed: 15,
+	turnRate: 4,
+	accel: 10,
+	step: function(game, ent) {
+		var y = ent.body.position[1] / param.Level.MaxGap;
+		// console.log(y);
+		switch (this.state) {
+		default:
+		case 0:
+			if (y >= 0.1) {
+				this.state++;
+				this.rem = this.period;
+			}
+			break;
+		case 3:
+		case 1:
+			if (--this.rem < 0) {
+				this.state++;
+			}
+			break;
+		case 2:
+			if (y <= -0.1) {
+				this.state++;
+				this.rem = this.period;
+			}
+			break;
+		}
+		this.state = this.state & 3;
+		var a = this.angles[this.state];
+		physics.adjustAngle(ent.body, a, this.turnRate);
+		a = ent.body.angle;
+		var v = tempv0;
+		v[0] = Math.cos(a) * this.speed;
+		v[1] = Math.sin(a) * this.speed;
+		physics.adjustVelocity(ent.body, v, this.accel);
 	},
 };
 
-entity.registerTypes(Enemies, 'Enemy');
+function Horiz() {}
+Horiz.prototype = {
+	color: color.hex(0x1C72FC),
+	sprite: 'EHoriz',
+	mass: 5,
+	health: 2,
+};
+
+function Diamond() {}
+Diamond.prototype = {
+	color: color.hex(0x54EBB9),
+	sprite: 'EDiamond',
+	mass: 5,
+	health: 2,
+};
+
+function Star() {}
+Star.prototype = {
+	color: color.hex(0xFFF8C4),
+	sprite: 'EStar',
+	mass: 5,
+	health: 2,
+};
+
+function Ace() {}
+Ace.prototype = {
+	color: color.hex(0xCB30FF),
+	sprite: 'EAce',
+	mass: 5,
+	health: 2,
+};
+
+function Silo() {}
+Silo.prototype = {
+	color: color.hex(0xA7A4B3),
+	sprite: 'ESilo',
+	mass: 0,
+	health: 5,
+};
+
+function Turret() {}
+Turret.prototype = {
+	color: color.hex(0xAB8249),
+	sprite: 'ETurret',
+	mass: 0,
+	health: 5,
+};
+
+var Enemies = {
+	Glider: Glider,
+	Horiz: Horiz,
+	Diamond: Diamond,
+	Star: Star,
+	Ace: Ace,
+	Silo: Silo,
+	Turret: Turret,
+};
+
+entity.registerTypes(
+	_.mapValues(Enemies, function(value) {
+		return function(game, args) {
+			/*jshint newcap:false*/
+			return new Enemy(game, args, new value());
+		};
+	}), 'Enemy');

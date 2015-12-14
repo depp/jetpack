@@ -136,10 +136,57 @@ function isGrounded(world, body) {
 	return false;
 }
 
+/*
+ * Compute angle a2 - a1.
+ */
+function deltaAngle(a1, a2) {
+	var d = a2 - a1;
+	d = d % (2 * Math.PI);
+	if (d > Math.PI) {
+		d -= 2 * Math.PI;
+	} else if (d < -Math.PI) {
+		d += 2 * Math.PI;
+	}
+	return d;
+}
+
+/*
+ * Adjust a body angle to the given heading.
+ */
+function adjustAngle(body, a, turnRate) {
+	var limit = turnRate / param.Rate;
+	var delta = deltaAngle(body.angle, a);
+	var d = Math.max(-limit, Math.min(+limit, delta));
+	body.angle += d;
+}
+
+/*
+ * Adjust a body angle to the given heading.
+ */
+function adjustVelocity(body, vel, accel) {
+	var limit = accel / param.Rate;
+	var v = body.velocity;
+	var dx = vel[0] - v[0], dy = vel[1] - v[1];
+	var d2 = dx * dx + dy * dy;
+	if (d2 < 0.01) {
+		return;
+	}
+	if (d2 > limit * limit) {
+		var a = limit / Math.sqrt(d2);
+		dx *= a;
+		dy *= a;
+	}
+	v[0] += dx;
+	v[1] += dy;
+}
+
 module.exports = {
 	Material: Material,
 	Mask: Mask,
 	resetWorld: resetWorld,
 	settle: settle,
 	isGrounded: isGrounded,
+	deltaAngle: deltaAngle,
+	adjustAngle: adjustAngle,
+	adjustVelocity: adjustVelocity,
 };
