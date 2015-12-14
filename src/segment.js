@@ -491,6 +491,39 @@ Segment.prototype.emit = function(game) {
 };
 
 /*
+ * Generate "open" level geometry: no obstacles
+ */
+Segment.prototype.generateOpen = function() {
+	var x0 = this.x1, x1 = x0 + util.randInt(150, 225) * 2;
+	this.colors = Colors.Open;
+	this.extendBorders(x1);
+};
+
+/*
+ * Generate "open" level geometry: no obstacles
+ */
+Segment.prototype.generateMedium = function() {
+	var x0 = this.x1, x1 = x0 + util.randInt(150, 225) * 2;
+	this.colors = Colors.Medium;
+	this.extendBorders(x1);
+};
+
+/*
+ * Generate "closed" level geometry: twisty passages.
+ */
+Segment.prototype.generateClosed = function() {
+	var x0 = this.x1, x1 = x0 + util.randInt(100, 125) * 2;
+	var x;
+	this.colors = Colors.Closed;
+	for (var j = 0; j < 100; j++) {
+		x = this.addVaryingBorders();
+		if (x >= x1) {
+			break;
+		}
+	}
+};
+
+/*
  * Create a random level segment.
  */
 function makeSegment(game, type) {
@@ -502,41 +535,11 @@ function makeSegment(game, type) {
 	seg.addBorder(y0, x, false, true);
 	seg.addBorder(y1, x, true, true);
 
-	var levelW = util.randInt(150, 225) * 2;
-	levelW = 100;
-	type = 0;
 	switch (type) {
 	default:
-	case 0:
-		// "Open style" / green - no obstacles, or almost none
-		seg.colors = Colors.Open;
-		seg.extendBorders(x + levelW);
-		for (var i = 0; i < 5; i++) {
-			game.spawn('Enemy.Star', {
-				position: [x - i * 3 + 10, -5],
-			});
-		}
-		game.spawn('Item.Weapon', {
-			position: [x + 30, 0],
-		});
-		break;
-
-	case 1:
-		// "Medium style" / yellow - some obstacles
-		seg.colors = Colors.Medium;
-		seg.extendBorders(x + levelW);
-		break;
-
-	case 2:
-		// "Closed style" / red - twisty and narrow, changing elevation
-		seg.colors = Colors.Closed;
-		for (var j = 0; j < 100; j++) {
-			x = seg.addVaryingBorders();
-			if (x >= levelW) {
-				break;
-			}
-		}
-		break;
+	case 0: seg.generateOpen(); break;
+	case 1: seg.generateMedium(); break;
+	case 2: seg.generateClosed(); break;
 	}
 
 	y0 = seg.floor.y;
