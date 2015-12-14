@@ -12,6 +12,7 @@ var vec2 = glm.vec2;
 require('./enemy');
 require('./item');
 require('./shot');
+require('./player');
 
 var background = require('./background');
 var camera = require('./camera');
@@ -20,7 +21,6 @@ var entity = require('./entity');
 var lights = require('./lights');
 var param = require('./param');
 var physics = require('./physics');
-var player = require('./player');
 var segment = require('./segment');
 var sprites = require('./sprites');
 var state = require('./state');
@@ -59,19 +59,18 @@ function Game() {
 
 	// Physics engine and entities
 	this.world = new p2.World();
-	this.player = new player.Player({
-		position: [0, -param.Level.MaxGap * 0.5 + 1],
-	});
 	this.camera = new camera.Camera({
 		leading: g.Leading / g.Speed,
 		offsetX: 20,
-		target: this.player.body,
 	});
 	this.buffers = [
 		vec2.create(),
 		vec2.create(),
 	];
+
+	// Initial state
 	this.nextSegment();
+	this.spawn({ type: 'Player' });
 	physics.settle(this.world, 1 / param.Rate, 3.0);
 	this.camera.reset();
 	this.world.on("beginContact", this._beginContact.bind(this));
@@ -125,7 +124,6 @@ Game.prototype.render = function(r) {
 		e.emit(this);
 	}
 
-	this.player.emit(this, frac);
 	this.lights.update(this.camera);
 
 	this.background.render(r, this.camera);
@@ -139,14 +137,23 @@ Game.prototype.render = function(r) {
  * dt: The timestep, in s
  */
 Game.prototype.step = function(dt) {
-	var i;
+	var bodies = this.world.bodies, i, ents, e;
 
 	if (this.camera._pos1[0] > this.buffers[1][0]) {
 		this.nextSegment();
 	}
 
 	control.game.update();
-	this.player.step(this);
+	ents = [];
+	for (i = 0; i < bodies.length; i++) {
+		e = bodies[i].entity;
+		if (e && e.step) {
+			ents.push(e);
+		}
+	}
+	for (i = 0; i< ents.length; i++) {
+		e.step(this);
+	}
 	this.world.step(dt);
 	this.camera.step();
 };
@@ -156,16 +163,29 @@ Game.prototype.step = function(dt) {
  */
 Game.prototype.nextSegment = function() {
 	console.log('Next segment');
-	var offset = vec2.create(), b;
+
+	// Figure out which bodies to keep
+	var bodies = this.world.bodies, i, b, e, keep = [];
+	var keepMinX = this.buffers[1][0] - param.Level.BufferWidth * 0.5 - 10;
+	for (i = 0; i < bodies.length; i++) {
+		b = bodies[i];
+		e = b.entity;
+		if (e && (e.alwaysKeep || b.position[0] >= keepMinX)) {
+			keep.push(b);
+		}
+	}
+
+	// Create the next segment
+	var offset = vec2.create();
 	physics.resetWorld(this.world);
-	vec2.subtract(offset, offset, this.buffers[1]);
+	vec2.negate(offset, this.buffers[1]);
 	segment.makeSegment(this, util.randInt(0, 2));
 	vec2.add(offset, offset, this.buffers[0]);
-	vec2.add(
-		this.player.body.position,
-		this.player.body.position,
-		offset);
-	this.world.addBody(this.player.body);
+	for (i = 0; i < keep.length; i++) {
+		b = keep[i];
+		vec2.add(b.position, b.position, offset);
+		this.world.addBody(b);
+	}
 	this.background.addOffset(offset);
 	this.camera.addOffset(offset);
 };
