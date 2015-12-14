@@ -112,9 +112,16 @@ Explosion.prototype = {
  * angle: Angle to fire at, float
  * isEnemy: True for enemy shots, false for player shots
  */
-function Shot(game, args) {
+function Shot(game, args, type) {
+	_.defaults(type, {
+		color: null,
+		sprite: null,
+		mass: 1,
+		radius: 0.5,
+		lifespan: 2
+	});
 	var source = args.source;
-	var dir = vec2.create(), speed = this.speed;
+	var dir = vec2.create(), speed = type.speed;
 	var angle, len2, hasDir = false;
 	// Prefer to use 'target'
 	if (!hasDir && args.hasOwnProperty('target')) {
@@ -156,33 +163,32 @@ function Shot(game, args) {
 		position: pos,
 		angle: angle,
 		velocity: vel,
-		mass: this.mass,
+		mass: type.mass,
 		fixedRotation: true,
 		gravityScale: 0,
 		// ccdSpeedThreshold: 10,
 	});
-	var shape = new p2.Circle({ radius: this.radius });
+	var shape = new p2.Circle({ radius: type.radius });
 	setTeam(shape, args.isEnemy);
 	body.addShape(shape);
 	this.isEnemy = !!args.isEnemy;
 	this.body = body;
+	this.type = type;
 }
 Shot.prototype = {
 	emit: function(game) {
 		game.sprites.add({
 			position: this.body.interpolatedPosition,
 			radius: 1.5,
-			color: this.color,
-			sprite: this.sprite,
+			color: this.type.color,
+			sprite: this.type.sprite,
 			angle: this.body.interpolatedAngle - Math.PI * 0.5,
 		});
 	},
-	color: null,
-	sprite: null,
-	mass: 1,
-	speed: 30,
-	radius: 0.5,
-	lifespan: 2,
+	onContact: function(game, eq, body) {
+		this.type.payload.onContact(game, eq, body, this);
+	},
+	lifespan: 3,
 };
 
 /**********************************************************************/
@@ -194,42 +200,54 @@ function SimplePayload(damage) {
 	this.damage = damage;
 }
 SimplePayload.prototype = {
-	onContact: function(game, eq, body) {
+	onContact: function(game, eq, body, shot) {
 		var e = body.entity;
 		if (e && e.onDamage) {
-			e.onDamage(game, 1);
+			e.onDamage(game, this.damage);
 		}
-		entity.destroy(this.body);
+		entity.destroy(shot.body);
 	},
 };
 
 /*
  * Mixin for shots that explode on contact.
  */
-var PayloadExplosion = {
-	onContact: function(game, eq, body) {
-		entity.spawn(game, {
-			type: Explosion,
-			position: this.body.position,
-			isEnemy: this.isEnemy,
-		});
-		entity.destroy(this.body);
+function ExplosivePayload(shot, damage) {
+	this.shot = shot;
+	this.damage = damage;
+}
+ExplosivePayload.prototype = {
+	onContact: function(game, eq, body, shot) {
+		game.spawnObj(new Explosion(game, {
+			position: shot.body.position,
+			isEnemy: shot.isEnemy,
+			damage: this.damage,
+		}));
+		entity.destroy(shot.body);
 	},
 };
 
-var Bullet = {
-	inherit: [Shot, PayloadSimple],
-	color: color.hex(0xffffff),
-	sprite: 'SDot',
-	speed: 60,
-};
+/**********************************************************************/
 
-var Rocket = {
-	inherit: [Shot, PayloadExplosion],
-	color: color.hex(0xffffff),
-	sprite: 'SRocket2',
-	speed: 45,
-};
+function Bullet(game, args) {
+	return new Shot(game, args, {
+		payload: new SimplePayload(1),
+		color: color.hex(0xffffff),
+		sprite: 'SDot',
+		speed: 60,
+	});
+}
+
+function Rocket(game, args) {
+	return new Shot(game, args, {
+		payload: new ExplosivePayload(2),
+		color: color.hex(0xffffff),
+		sprite: 'SRocket2',
+		speed: 45,
+	});
+}
+
+/**********************************************************************/
 
 entity.registerTypes({
 	Bullet: Bullet,

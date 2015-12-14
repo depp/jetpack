@@ -73,7 +73,7 @@ function Game() {
 
 	// Initial state
 	this.nextSegment();
-	this.spawn({ type: 'Player' });
+	this.spawn('Player', {});
 	physics.settle(this.world, 1 / param.Rate, 3.0);
 	this.camera.reset();
 	this.world.on("beginContact", this._beginContact.bind(this));
@@ -216,10 +216,35 @@ Game.prototype._beginContact = function(evt) {
 };
 
 /*
- * Spawn an entity.
+ * Construct an entity and spawn it.
  */
-Game.prototype.spawn = function(args) {
-	entity.spawn(this, args);
+Game.prototype.spawn = function(type, args) {
+	var ctor = entity.getType(type);
+	if (!ctor) {
+		console.error('No such type: ' + type);
+		return;
+	}
+	this.spawnObj(ctor(this, args));
+};
+
+/*
+ * Spawn an entity which is already constructed.
+ */
+Game.prototype.spawnObj = function(ent) {
+	var body = ent.body;
+	if (!body) {
+		console.warn('Could not spawn entity');
+		return;
+	}
+	body.entity = ent;
+	if (!body.world) {
+		this.world.addBody(body);
+		// Workaround (might be a bug in p2.js...)
+		vec2.copy(body.previousPosition, body.position);
+	}
+	if ('lifespan' in ent) {
+		ent.endFrame = this.time.frame + Math.ceil(ent.lifespan * param.Rate);
+	}
 };
 
 /*

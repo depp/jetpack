@@ -91,7 +91,7 @@ var Items = {
 /*
  * Class for items we can pick up.
  */
-function Item(game, args) {
+function Item(game, args, type) {
 	var position = args.position;
 	var body = new p2.Body({
 		position: args.position,
@@ -107,7 +107,7 @@ function Item(game, args) {
 	body.addShape(shape);
 	this.body = body;
 	this.bobShift = Math.random() * (Math.PI * 2);
-	this.type = new Items.Weapon(game);
+	this.type = type;
 }
 Item.prototype = {
 	emit: function(game) {
@@ -122,15 +122,17 @@ Item.prototype = {
 		if (!this.type.pickup(game, body.entity)) {
 			return;
 		}
-		game.spawn({
-			type: Corpse,
-			base: this,
-		});
+		game.spawnObj(new Corpse(game, { base: this }));
 	},
 };
 
 /**********************************************************************/
 
-entity.registerTypes({
-	Item: Item,
-});
+entity.registerTypes(
+	_.mapValues(Items, function(value) {
+		return function(game, args) {
+			/*jshint newcap: false*/
+			return new Item(game, args, new value(game));
+		};
+	}),
+	'Item');

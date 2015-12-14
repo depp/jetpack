@@ -20,30 +20,30 @@ var PlayerColor = color.rgb(1, 0, 0.5);
 /*
  * Player object.
  */
-var Player = {
-	spawn: function(game, args) {
-		var g = param.Game;
-		var position = vec2.fromValues(0, -param.Level.MaxGap * 0.5 + 1);
-		vec2.add(position, position, game.buffers[0]);
-		var body = new p2.Body({
-			mass: g.Mass,
-			position: position,
-			fixedRotation: true,
-		});
-		var shape = new p2.Circle({ radius: 1 });
-		shape.material = physics.Material.Player;
-		shape.collisionGroup = physics.Mask.Player;
-		shape.collisionMask = physics.Mask.World |
-			physics.Mask.Enemy | physics.Mask.Item;
-		body.addShape(shape);
-		this.body = body;
-		this._drag = g.Drag;
-		this._jetForceUp = g.Mass * g.Jetpack;
-		this._jetForceForward = g.Speed * g.Speed * g.Drag;
-		this._isFlying = false;
-		game.camera.set({ target: body });
-		this.onGiveWeapon(game, weapon.getWeapon(0));
-	},
+function Player(game, args) {
+	var g = param.Game;
+	var position = vec2.fromValues(0, -param.Level.MaxGap * 0.5 + 1);
+	vec2.add(position, position, game.buffers[0]);
+	var body = new p2.Body({
+		mass: g.Mass,
+		position: position,
+		fixedRotation: true,
+	});
+	var shape = new p2.Circle({ radius: 1 });
+	shape.material = physics.Material.Player;
+	shape.collisionGroup = physics.Mask.Player;
+	shape.collisionMask = physics.Mask.World |
+		physics.Mask.Enemy | physics.Mask.Item;
+	body.addShape(shape);
+	this.body = body;
+	this._drag = g.Drag;
+	this._jetForceUp = g.Mass * g.Jetpack;
+	this._jetForceForward = g.Speed * g.Speed * g.Drag;
+	this._isFlying = false;
+	game.camera.set({ target: body });
+	this.onGiveWeapon(game, weapon.getWeapon(0));
+}
+Player.prototype = {
 	step: function(game) {
 		var ctl = control.game;
 		var vx = this.body.velocity[0], vy = this.body.velocity[1];
@@ -87,5 +87,5 @@ var Player = {
 };
 
 entity.registerTypes({
-	Player: Player,
+	Player: function(game, args) { return new Player(game, args); },
 });

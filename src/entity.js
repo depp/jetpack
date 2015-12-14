@@ -45,54 +45,12 @@ function registerTypes(types, category) {
 	});
 }
 
-/*
- * Spawn an entity.
- *
- * game: The game screen
- * args: The spawn arguments, including 'type'
- */
-function spawn(game, args) {
-	var type = args.type;
-	if (typeof type == 'string') {
-		if (!Types.hasOwnProperty(type)) {
-			console.warn('No such entity type: ' + type);
-			return;
-		}
-		type = Types[type];
-	}
-
-	/* jshint newcap: false */
-	var obj;
-	if (typeof type == 'function') {
-		obj = new type(game, args);
-	} else if (typeof type == 'object' && type) {
-		obj = Object.create(type);
-		obj.spawn(game, args);
-	} else {
-		throw new TypeError('Bad entity type');
-	}
-
-	var body = obj.body;
-	if (!body) {
-		console.warn('Could not spawn entity');
-		return;
-	}
-	body.entity = obj;
-	if (!body.world) {
-		game.world.addBody(body);
-		// Workaround (might be a bug in p2.js...)
-		vec2.copy(body.previousPosition, body.position);
-	}
-	if ('initialHealth' in obj) {
-		obj.health = obj.initialHealth;
-	}
-	if ('lifespan' in obj) {
-		obj.endFrame = game.time.frame + Math.ceil(obj.lifespan * param.Rate);
-	}
+function getType(type) {
+	return Types[type];
 }
 
 module.exports = {
 	destroy: destroy,
 	registerTypes: registerTypes,
-	spawn: spawn,
+	getType: getType,
 };

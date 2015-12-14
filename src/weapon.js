@@ -133,8 +133,7 @@ createType({
 		this.action = new ActionSingle(5);
 	},
 	fire: function(game) {
-		game.spawn({
-			type: 'Shot.Bullet',
+		game.spawn('Shot.Bullet', {
 			source: this.source,
 			direction: forwardDir(0.1),
 		});
@@ -150,8 +149,7 @@ createType({
 	},
 	fire: function(game) {
 		for (var i = 0; i < 3; i++) {
-			game.spawn({
-				type: 'Shot.Bullet',
+			game.spawn('Shot.Bullet', {
 				source: this.source,
 				direction: forwardDir(0.1, (i-1) * 0.25),
 			});
@@ -170,8 +168,7 @@ createType({
 		this.action = new ActionAuto(5);
 	},
 	fire: function(game) {
-		game.spawn({
-			type: 'Shot.Rocket',
+		game.spawn('Shot.Rocket', {
 			source: this.source,
 			direction: forwardDir(0.1),
 		});

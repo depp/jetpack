@@ -13,11 +13,12 @@ var entity = require('./entity');
 var physics = require('./physics');
 
 function emitEnemy(obj, game) {
+	var type = obj.type;
 	game.sprites.add({
 		position: obj.body.interpolatedPosition,
 		radius: 1.5,
 		color: obj.color,
-		sprite: obj.sprite.sprite,
+		sprite: type.sprite,
 		angle: obj.body.interpolatedAngle - Math.PI * 0.5,
 	});
 }
@@ -25,19 +26,18 @@ function emitEnemy(obj, game) {
 /*
  * Class for enemy corpses.
  */
-var Corpse = {
-	spawn: function(game, args) {
-		var body = args.body;
-		body.gravityScale = 1;
-		body.mass *= 0.5;
-		body.updateMassProperties();
-		_.forEach(body.shapes, function(s) {
-			s.material = physics.Material.Bouncy;
-		});
-		this.body = body;
-		this.sprite = args.sprite;
-		this.color = vec4.clone(color.White);
-	},
+function Corpse(game, body, type) {
+	body.gravityScale = 1;
+	body.mass *= 0.5;
+	body.updateMassProperties();
+	_.forEach(body.shapes, function(s) {
+		s.material = physics.Material.Bouncy;
+	});
+	this.body = body;
+	this.type = type;
+	this.color = vec4.clone(color.White);
+}
+Corpse.prototype = {
 	emit: function(game) {
 		emitEnemy(this, game);
 	},
@@ -50,29 +50,30 @@ var Corpse = {
  * Spawn properties:
  * position: Enemy position
  */
-var Enemy = {
-	spawn: function(game, args) {
-		var position = args.position;
-		var body = new p2.Body({
-			position: args.position,
-			angle: Math.PI * 0.5,
-			mass: this.mass,
-			gravityScale: 0,
-		});
-		var shape = new p2.Circle({ radius: this.radius });
-		shape.collisionGroup = physics.Mask.Enemy;
-		shape.collisionMask = physics.Mask.World | physics.Mask.Player;
-		body.addShape(shape);
-		this.body = body;
-		this.hurtTween = null;
-		this.color = vec4.clone(this.sprite.color);
-	},
+function Enemy(game, args, type) {
+	var position = args.position;
+	var body = new p2.Body({
+		position: args.position,
+		angle: Math.PI * 0.5,
+		mass: this.mass,
+		gravityScale: 0,
+	});
+	var shape = new p2.Circle({ radius: this.radius });
+	shape.collisionGroup = physics.Mask.Enemy;
+	shape.collisionMask = physics.Mask.World | physics.Mask.Player;
+	body.addShape(shape);
+	this.body = body;
+	this.hurtTween = null;
+	this.color = vec4.clone(type.color);
+	this.type = type;
+	this.health = type.health;
+}
+Enemy.prototype = {
 	emit: function(game) {
 		emitEnemy(this, game);
 	},
 	onDamage: function(game, amt) {
-		if (this.initialHealth === 0) {
-			// Invincible
+		if (this.health <= 0) {
 			return;
 		}
 		this.health -= amt;
@@ -80,19 +81,14 @@ var Enemy = {
 			this.hurtTween =
 				(this.hurtTween ? this.hurtTween.reset() : game.tween(this))
 				.to({ color: color.White }, 0.1)
-				.to({ color: this.sprite.color, hurtTween: null }, 0.3)
+				.to({ color: this.type.color, hurtTween: null }, 0.3)
 				.start();
 		} else {
 			this.die(game);
 		}
 	},
 	die: function(game) {
-		entity.spawn(game, {
-			type: Corpse,
-			body: this.body,
-			sprite: this.sprite,
-			color: this.color,
-		});
+		game.spawnObj(new Corpse(game, this.body, this.type));
 	},
 	baseColor: color.hex(0x808080),
 	sprite: {
@@ -104,58 +100,62 @@ var Enemy = {
 };
 
 var Enemies = {
-	Glider: {
-		sprite: {
+	Glider: function (game, args) {
+		return new Enemy(game, args, {
 			color: color.hex(0xDCE800),
 			sprite: 'EGlider',
-		},
-		mass: 2,
-		initialHealth: 2,
+			mass: 2,
+			health: 2,
+		});
 	},
-	Horiz: {
-		sprite: {
+	Horiz: function(game, args) {
+		return new Enemy(game, args, {
 			color: color.hex(0x1C72FC),
 			sprite: 'EHoriz',
-		},
-		initialHealth: 2,
+			mass: 5,
+			health: 2,
+		});
 	},
-	Diamond: {
-		sprite: {
+	Diamond: function(game, args) {
+		return new Enemy(game, args, {
 			color: color.hex(0x54EBB9),
 			sprite: 'EDiamond',
-		},
-		initialHealth: 2,
+			mass: 5,
+			health: 2,
+		});
 	},
-	Star: {
-		sprite: {
+	Star: function(game, args) {
+		return new Enemy(game, args, {
 			color: color.hex(0xFFF8C4),
 			sprite: 'EStar',
-		},
+			mass: 5,
+			health: 2,
+		});
 	},
-	Ace: {
-		sprite: {
+	Ace: function(game, args) {
+		return new Enemy(game, args, {
 			color: color.hex(0xCB30FF),
 			sprite: 'EAce',
-		},
+			mass: 5,
+			health: 2,
+		});
 	},
-	Silo: {
-		sprite: {
+	Silo: function(game, args) {
+		return new Enemy(game, args, {
 			color: color.hex(0xA7A4B3),
 			sprite: 'ESilo',
-		},
-		mass: 0,
-		initialHealth: 5,
+			mass: 0,
+			health: 5,
+		});
 	},
-	Turret: {
-		sprite: {
+	Turret: function(game, args) {
+		return new Enemy(game, args, {
 			color: color.hex(0xAB8249),
 			sprite: 'ETurret',
-		},
-		mass: 0,
-		initialHealth: 5,
+			mass: 0,
+			health: 5,
+		});
 	},
 };
-
-_.forOwn(Enemies, function(value) { value.inherit = [Enemy]; });
 
 entity.registerTypes(Enemies, 'Enemy');
