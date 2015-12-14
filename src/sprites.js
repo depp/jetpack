@@ -192,8 +192,7 @@ Sprites.prototype.render = function(r, camera) {
 
 /*
  * Add sprites to the sprite layer.
- * arg.x: X coordinate
- * arg.y: Y coordinate
+ * arg.position: Position
  * arg.radius: Radius
  * arg.sprite: Name of sprite
  * arg.color: Color to use
@@ -231,7 +230,12 @@ Sprites.prototype.add = function() {
 	for (i = 0; i < arguments.length; i++) {
 		var j = 20 * (count + i), k = 40 * (count + i);
 		var arg = arguments[i];
-		var r = arg.radius, x = arg.x, y = arg.y;
+		var pos = arg.position, r = arg.radius;
+		if (!pos || typeof r !== 'number') {
+			console.error('Invalid sprite');
+			continue;
+		}
+		var x = pos[0], y = pos[1];
 		var angle = arg.angle, vc = r, vs = 0;
 		if (angle) {
 			vc = Math.cos(angle) * r;

@@ -31,11 +31,9 @@ var Item = {
 		this.body = body;
 		game.world.addBody(body);
 	},
-	emit: function(game, frac) {
-		var pos = physics.bodyPos(this.body, frac);
+	emit: function(game) {
 		game.sprites.add({
-			x: pos[0],
-			y: pos[1],
+			position: this.body.interpolatedPosition,
 			radius: 3,
 			color: this.color,
 			sprite: 'IShield2',

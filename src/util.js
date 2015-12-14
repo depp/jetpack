@@ -73,26 +73,6 @@ function randomInBody(vec, body) {
 	randomInCircle(vec, body.position, body.boundingRadius);
 }
 
-/*
- * Calculate an impact vector between the origin body and the target body.
- */
-function impactVector(vec, source, target, scale, jitter) {
-	var angle = Math.random() * 2 * Math.PI;
-	var c = Math.cos(angle), s = Math.sin(angle);
-	vec2.subtract(vec, target.position, source.position);
-	vec[0] += c * jitter;
-	vec[1] += s * jitter;
-	var len2 = vec2.squaredLength(vec);
-	if (len2 < 0.01) {
-		vec[0] = c * scale;
-		vec[1] = s * scale;
-	} else {
-		var a = scale / Math.sqrt(len2);
-		vec[0] *= a;
-		vec[1] *= a;
-	}
-}
-
 module.exports = {
 	genIndexArray: genIndexArray,
 	randInt: randInt,

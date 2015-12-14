@@ -32,15 +32,13 @@ var Enemy = {
 		this.body = body;
 		game.world.addBody(body);
 	},
-	emit: function(game, frac) {
-		var pos = physics.bodyPos(this.body, frac);
+	emit: function(game) {
 		game.sprites.add({
-			x: pos[0],
-			y: pos[1],
+			position: this.body.interpolatedPosition,
 			radius: 1.5,
 			color: this.color,
 			sprite: this.sprite,
-			angle: this.body.angle - Math.PI * 0.5,
+			angle: this.body.interpolatedAngle - Math.PI * 0.5,
 		});
 	},
 	color: color.hex(0xffffff),

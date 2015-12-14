@@ -72,11 +72,9 @@ var Explosion = {
 		game.world.addBody(body);
 		this.body = body;
 	},
-	emit: function(game, frac) {
-		var pos = physics.bodyPos(this.body, frac);
+	emit: function(game) {
 		game.sprites.add({
-			x: pos[0],
-			y: pos[1],
+			position: this.body.interpolatedPosition,
 			radius: 3.0,
 			color: 0xffffffff,
 			sprite: 'SStar',
@@ -154,15 +152,13 @@ var Shot = {
 		this.isEnemy = !!args.isEnemy;
 		this.body = body;
 	},
-	emit: function(game, frac) {
-		var pos = physics.bodyPos(this.body, frac);
+	emit: function(game) {
 		game.sprites.add({
-			x: pos[0],
-			y: pos[1],
+			position: this.body.interpolatedPosition,
 			radius: 1.5,
 			color: this.color,
 			sprite: 'SRocket2',
-			angle: this.body.angle - Math.PI * 0.5,
+			angle: this.body.interpolatedAngle - Math.PI * 0.5,
 		});
 	},
 	onContact: function(game, eq, body) {

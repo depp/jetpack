@@ -70,8 +70,7 @@ Player.prototype.step = function(game) {
 Player.prototype.emit = function(game, frac) {
 	var pos = physics.bodyPos(this.body, frac);
 	game.sprites.add({
-		x: pos[0],
-		y: pos[1],
+		position: pos,
 		radius: 1.5,
 		color: PlayerColorU32,
 		sprite: this._isFlying ? 'PForward' : 'PStand',

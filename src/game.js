@@ -104,16 +104,27 @@ Game.prototype.render = function(r) {
 	var gl = r.gl;
 	this.time.update(r.time);
 	var frac = this.time.frac;
+	var bodies = this.world.bodies, i, b, e;
+
 	this.camera.update(r, frac);
 	this.sprites.clear();
 	this.lights.clearLocal();
-	var b = this.world.bodies, i;
-	for (i = 0; i < b.length; i++) {
-		var e = b[i].entity;
-		if (e) {
-			e.emit(this, frac);
+
+	// If we relied on p2.js to manage update timing, then it would
+	// interpolate the positions for us.  We do it ourselves because
+	// p2.js does not expose the interface.  I should file an
+	// enhancement request.
+	for (i = 0; i < bodies.length; i++) {
+		b = bodies[i];
+		e = b.entity;
+		if (!e) {
+			continue;
 		}
+		vec2.lerp(b.interpolatedPosition, b.previousPosition, b.position, frac);
+		b.interpolatedAngle = b.previousAngle + frac * (b.angle - b.previousAngle);
+		e.emit(this);
 	}
+
 	this.player.emit(this, frac);
 	this.lights.update(this.camera);
 
