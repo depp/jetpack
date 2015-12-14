@@ -8,6 +8,7 @@
 var glm = require('gl-matrix');
 var vec2 = glm.vec2;
 var vec3 = glm.vec3;
+var vec4 = glm.vec4;
 
 var MaxGlobal = 4;
 var MaxLocal = 4;
@@ -40,13 +41,13 @@ Lights.prototype.clearLocal = function() {
 /*
  * Add a local light.
  *
- * obj.color: vec3
+ * obj.color: vec4 (alpha is ignored)
  * obj.intensity: float
  * obj.position: vec2
  * obj.height: float
  */
 Lights.prototype.addLocal = function(obj) {
-	if (!obj.color || obj.color.length !== 3 ||
+	if (!obj.color || obj.color.length !== 4 ||
 			!obj.position || obj.position.length !== 2) {
 		throw new TypeError('Bad local light');
 	}
@@ -56,7 +57,7 @@ Lights.prototype.addLocal = function(obj) {
 /*
  * Add global lights.
  *
- * obj.color: vec3
+ * obj.color: vec4 (alpha is ignored)
  * obj.intensity: float
  * obj.direction: vec3
  */
@@ -65,16 +66,18 @@ Lights.prototype.addGlobal = function(arr) {
 	var n = Math.min(arr.length, MaxGlobal - this._global);
 	for (; j < n; j++, i++) {
 		var obj = arr[j];
-		if (!obj.color || obj.color.length !== 3 ||
+		if (!obj.color || obj.color.length !== 4 ||
 				!obj.direction || obj.direction.length !== 3) {
 			throw new TypeError('Bad global light');
 		}
-		vec3.scale(
-			this.colors.subarray(i * 4, i * 4 + 3),
+		vec4.scale(
+			this.colors.subarray(i * 4, i * 4 + 4),
 			obj.color, obj.intensity);
+		this.colors[i * 4 + 3] = 0;
 		vec3.normalize(
 			this.locs.subarray(i * 4, i * 4 + 3),
 			obj.direction);
+		this.locs[i * 4 + 3] = 0;
 	}
 	this._global = i;
 };

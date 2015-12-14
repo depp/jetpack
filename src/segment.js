@@ -16,31 +16,22 @@ function initShape(s) {
 	s.material = physics.Material.World;
 }
 
-function tweakColor(c) {
-	var tint = 0.2 * Math.random();
-	var shade = 0.2 * Math.random();
-	var rem = 1 - tint - shade;
-	return color.rgb(
-		tint + c[0] * rem, tint + c[1] * rem, tint + c[2] * rem
-	);
-}
-
 var Colors = {
 	Buffer: {
 		Floor: color.rgb(0.2, 0.2, 0.2),
 		Ceiling: color.rgb(0.8, 0.8, 0.8),
 	},
 	Open: {
-		Floor: [0.2, 0.6, 0.2],
-		Ceiling: [0.6, 1.0, 0.6],
+		Floor: color.rgb(0.2, 0.6, 0.2),
+		Ceiling: color.rgb(0.6, 1.0, 0.6),
 	},
 	Medium: {
-		Floor: [0.6, 0.5, 0.2],
-		Ceiling: [1.0, 0.9, 0.5],
+		Floor: color.rgb(0.6, 0.5, 0.2),
+		Ceiling: color.rgb(1.0, 0.9, 0.5),
 	},
 	Closed: {
-		Floor: [0.6, 0.1, 0.2],
-		Ceiling: [1.0, 0.5, 0.5],
+		Floor: color.rgb(0.6, 0.1, 0.2),
+		Ceiling: color.rgb(1.0, 0.5, 0.5),
 	},
 };
 
@@ -89,7 +80,8 @@ Border.prototype.emitBody = function(world, yLimit) {
 /*
  * Emit the border tile graphics.
  */
-Border.prototype.emitTiles = function(tiles, color) {
+Border.prototype.emitTiles = function(tiles, baseColor) {
+	var tileColor = new Float32Array(4);
 	var remW = Math.floor((1 + this.x1 - this.x0) * 0.5);
 	var x = this.x0, y = this.y, dirY = this.isCeiling ? +1 : -1;
 	if (this.isBuffer) {
@@ -135,12 +127,15 @@ Border.prototype.emitTiles = function(tiles, color) {
 		}
 		th = Math.max(th, 24);
 		remW -= tw;
+		color.tintShade(
+			tileColor, baseColor,
+			Math.random() * 0.2, Math.random() * 0.2);
 		newTiles.push({
 			x: x + tw,
 			y: y + th * dirY,
 			w: tw * 2,
 			h: th * 2,
-			color: tweakColor(color),
+			color: tileColor,
 		});
 		x += tw * 2;
 	}

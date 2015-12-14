@@ -4,6 +4,7 @@
    and the Jetpack Space Pirates source code is distributed under the
    terms of the MIT license.  See LICENSE.txt for details. */
 
+var color = require('./color');
 var load = require('./load');
 var shader = require('./shader');
 var util = require('./util');
@@ -209,7 +210,7 @@ Tiles.prototype.add = function(tiles) {
 		var x = tile.x, y = tile.y, w = tile.w, h = tile.h;
 		var tx = Math.floor(1024 * Math.random() - 512);
 		var ty = Math.floor(1024 * Math.random() - 512);
-		var color = tile.color;
+		var tcolor = color.toU32(tile.color);
 
 		f32[j+ 0] = x - w * 0.5;
 		f32[j+ 1] = y - h * 0.5;
@@ -219,7 +220,7 @@ Tiles.prototype.add = function(tiles) {
 		f32[j+ 5] = 0;
 		f32[j+ 6] = 0;
 		f32[j+ 7] = 0;
-		u32[j+ 8] = color;
+		u32[j+ 8] = tcolor;
 
 		f32[j+ 9] = x + w * 0.5;
 		f32[j+10] = y - h * 0.5;
@@ -229,7 +230,7 @@ Tiles.prototype.add = function(tiles) {
 		f32[j+14] = 0;
 		f32[j+15] = 0;
 		f32[j+16] = 0;
-		u32[j+17] = color;
+		u32[j+17] = tcolor;
 
 		f32[j+18] = x - w * 0.5;
 		f32[j+19] = y + h * 0.5;
@@ -239,7 +240,7 @@ Tiles.prototype.add = function(tiles) {
 		f32[j+23] = 0;
 		f32[j+24] = 0;
 		f32[j+25] = 0;
-		u32[j+26] = color;
+		u32[j+26] = tcolor;
 
 		f32[j+27] = x + w * 0.5;
 		f32[j+28] = y + h * 0.5;
@@ -249,7 +250,7 @@ Tiles.prototype.add = function(tiles) {
 		f32[j+32] = 0;
 		f32[j+33] = 0;
 		f32[j+34] = 0;
-		u32[j+35] = color;
+		u32[j+35] = tcolor;
 	}
 
 	this.count = newCount;

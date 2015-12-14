@@ -14,8 +14,7 @@ var entity = require('./entity');
 var param = require('./param');
 var physics = require('./physics');
 
-var PlayerColor = [1, 0, 0.5];
-var PlayerColorU32 = color.rgb.apply(null, PlayerColor);
+var PlayerColor = color.rgb(1, 0, 0.5);
 
 /*
  * Player object.
@@ -72,7 +71,7 @@ var Player = {
 		game.sprites.add({
 			position: pos,
 			radius: 1.5,
-			color: PlayerColorU32,
+			color: PlayerColor,
 			sprite: this._isFlying ? 'PForward' : 'PStand',
 		});
 		game.lights.addLocal({

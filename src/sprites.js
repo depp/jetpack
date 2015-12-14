@@ -5,6 +5,7 @@
    terms of the MIT license.  See LICENSE.txt for details. */
 'use strict';
 
+var color = require('./color');
 var load = require('./load');
 var shader = require('./shader');
 var util = require('./util');
@@ -241,7 +242,7 @@ Sprites.prototype.add = function() {
 			vc = Math.cos(angle) * r;
 			vs = Math.sin(angle) * r;
 		}
-		var color1 = arg.color, color2 = 0xffffffff;
+		var color1 = color.toU32(arg.color), color2 = 0xffffffff;
 		var sprite = SpriteNames[arg.sprite];
 		if (typeof sprite == 'undefined') {
 			console.warn('Unknown sprite: ' + arg.sprite);

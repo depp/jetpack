@@ -16,6 +16,7 @@ require('./player');
 
 var background = require('./background');
 var camera = require('./camera');
+var color = require('./color');
 var control = require('./control');
 var entity = require('./entity');
 var lights = require('./lights');
@@ -44,15 +45,15 @@ function Game() {
 	this.sprites = new sprites.Sprites();
 	this.lights = new lights.Lights();
 	this.lights.addGlobal([{
-		color: [1.0, 0.9, 0.2],
+		color: color.rgb(1.0, 0.9, 0.2),
 		intensity: 0.6,
 		direction: [1, 5, 5],
 	}, {
-		color: [0.4, 0.3, 1.0],
+		color: color.rgb(0.4, 0.3, 1.0),
 		intensity: 0.4,
 		direction: [-7, -4, +10],
 	}, {
-		color: [0.3, 0.5, 0.9],
+		color: color.rgb(0.3, 0.5, 0.9),
 		intensity: 0.4,
 		direction: [7, -4, +8],
 	}]);
