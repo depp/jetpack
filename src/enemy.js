@@ -78,7 +78,6 @@ Enemies.prototype.step = function(game) {
  * Emit graphics data.
  */
 Enemies.prototype.emit = function(game, frac) {
-	console.log('EMIT', this._spawn.length);
 	var i, sp = this._spawn;
 	for (i = 0; i < sp.length; i++) {
 		var e = sp[i];
