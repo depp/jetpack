@@ -178,7 +178,7 @@ function Tween(mgr, target, props) {
  */
 Tween.prototype.reset = function(props) {
 	if (this.running) {
-		this.update(this._mgr._time);
+		this._update(this._mgr._time);
 	}
 	this.running = false;
 	this._index = 0;     // current segment
