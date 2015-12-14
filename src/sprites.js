@@ -232,7 +232,11 @@ Sprites.prototype.add = function() {
 		var j = 20 * (count + i), k = 40 * (count + i);
 		var arg = arguments[i];
 		var r = arg.radius, x = arg.x, y = arg.y;
-		var x0 = x - r, x1 = x + r, y0 = y - r, y1 = y + r;
+		var angle = arg.angle, vc = r, vs = 0;
+		if (angle) {
+			vc = Math.cos(angle) * r;
+			vs = Math.sin(angle) * r;
+		}
 		var color1 = arg.color, color2 = 0xffffffff;
 		var sprite = SpriteNames[arg.sprite];
 		if (typeof sprite == 'undefined') {
@@ -241,29 +245,29 @@ Sprites.prototype.add = function() {
 		}
 		var tx = sprite & 7, ty = sprite >> 3;
 
-		f32[j+ 0] = x0;
-		f32[j+ 1] = y0;
+		f32[j+ 0] = x - vc + vs;
+		f32[j+ 1] = y - vc - vs;
 		i16[k+ 4] = tx;
 		i16[k+ 5] = ty + 1;
 		u32[j+ 3] = color1;
 		u32[j+ 4] = color2;
 
-		f32[j+ 5] = x1;
-		f32[j+ 6] = y0;
+		f32[j+ 5] = x + vc + vs;
+		f32[j+ 6] = y - vc + vs;
 		i16[k+14] = tx + 1;
 		i16[k+15] = ty + 1;
 		u32[j+ 8] = color1;
 		u32[j+ 9] = color2;
 
-		f32[j+10] = x0;
-		f32[j+11] = y1;
+		f32[j+10] = x - vc - vs;
+		f32[j+11] = y + vc - vs;
 		i16[k+24] = tx;
 		i16[k+25] = ty;
 		u32[j+13] = color1;
 		u32[j+14] = color2;
 
-		f32[j+15] = x1;
-		f32[j+16] = y1;
+		f32[j+15] = x + vc - vs;
+		f32[j+16] = y + vc + vs;
 		i16[k+34] = tx + 1;
 		i16[k+35] = ty;
 		u32[j+18] = color1;
