@@ -155,14 +155,12 @@ Game.prototype.nextSegment = function() {
 };
 
 Game.prototype._beginContact = function(evt) {
-	var e1 = evt.bodyA.entity || null;
-	var e2 = evt.bodyB.entity || null;
-	var eq = evt.contactEquations;
-	if (e1 && e1.onContact) {
-		e1.onContact(this, eq, e2);
+	var a = evt.bodyA, b = evt.bodyB, eq = evt.contactEquations;
+	if (a.entity && a.entity.onContact) {
+		a.entity.onContact(this, eq, b);
 	}
-	if (e2 && e2.onContact) {
-		e2.onContact(this, eq, e1);
+	if (b.entity && b.entity.onContact) {
+		b.entity.onContact(this, eq, a);
 	}
 };
 

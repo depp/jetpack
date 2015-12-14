@@ -17,7 +17,104 @@ function destroy(body) {
 	}
 }
 
+function setTeam(shape, isEnemy) {
+	if (isEnemy) {
+		shape.collisionGroup = physics.Mask.Enemy;
+		shape.collisionMask = physics.Mask.World | physics.Mask.Player;
+	} else {
+		shape.collisionGroup = physics.Mask.Player;
+		shape.collisionMask = physics.Mask.World | physics.Mask.Enemy;
+	}
+}
 
+/*
+ * Create a random vector selected uniformly from a circle.
+ */
+function randomInCircle(vec, center, radius) {
+	var x, y;
+	do {
+		x = 2 * Math.random() - 1;
+		y = 2 * Math.random() - 1;
+	} while (x * x + y * y > 1);
+	vec[0] = x * radius + center[0];
+	vec[1] = x * radius + center[1];
+}
+
+/*
+ * Create a random vector in the bounding radius of a body.
+ */
+function randomInBody(vec, body) {
+	randomInCircle(vec, body.position, body.boundingRadius);
+}
+
+/*
+ * Calculate an impact vector between the origin body and the target body.
+ */
+function impactVector(vec, source, target, scale, jitter) {
+	var angle = Math.random() * 2 * Math.PI;
+	var c = Math.cos(angle), s = Math.sin(angle);
+	vec2.subtract(vec, target.position, source.position);
+	vec[0] += c * jitter;
+	vec[1] += s * jitter;
+	var len2 = vec2.squaredLength(vec);
+	if (len2 < 0.01) {
+		vec[0] = c * scale;
+		vec[1] = s * scale;
+	} else {
+		var a = scale / Math.sqrt(len2);
+		vec[0] *= a;
+		vec[1] *= a;
+	}
+}
+
+/*
+ * Explosion object.
+ *
+ * Spawn properties:
+ * position: vec2 position
+ * radius: float explosion radius
+ */
+var Explosion = {
+	spawn: function(game, args) {
+		var body = new p2.Body({
+			position: args.position,
+		});
+		var shape = new p2.Circle({
+			radius: args.radius,
+			sensor: true,
+		});
+		if (args.isEnemy) {
+			shape.collisionGroup = physics.Mask.Player;
+			shape.collisionMask = physics.Mask.Enemy;
+		} else {
+			shape.collisionGroup = physics.Mask.Enemy;
+			shape.collisionMask = physics.Mask.Player;
+		}
+		setTeam(shape, args.isEnemy);
+		body.entity = this;
+		body.addShape(shape);
+		game.world.addBody(body);
+		this.body = body;
+		console.log('SPAWN EXPLOSION');
+	},
+	emit: function(game, frac) {
+		var pos = physics.bodyPos(this.body, frac);
+		game.sprites.add({
+			x: pos[0],
+			y: pos[1],
+			radius: 3.0,
+			color: 0xffffffff,
+			sprite: 'SStar',
+		});
+	},
+	onContact: function(game, eq, body) {
+		var impulse = vec2.create(), point = vec2.create();
+		impactVector(impulse, this.body, body, 50, 0.2);
+		randomInBody(point, body);
+		body.applyImpulse(impulse, body);
+		console.log('HIT');
+	},
+};
 
 /*
  * Base mixin for shots.
@@ -76,17 +173,12 @@ var Shot = {
 			gravityScale: 0,
 		});
 		var shape = new p2.Circle({ radius: this.radius });
-		if (args.isEnemy) {
-			shape.collisionGroup = physics.Mask.Enemy;
-			shape.collisionMask = physics.Mask.World | physics.Mask.Player;
-		} else {
-			shape.collisionGroup = physics.Mask.Player;
-			shape.collisionMask = physics.Mask.World | physics.Mask.Enemy;
-		}
+		setTeam(shape, args.isEnemy);
 		body.entity = this;
 		body.addShape(shape);
-		this.body = body;
 		game.world.addBody(body);
+		this.isEnemy = !!args.isEnemy;
+		this.body = body;
 	},
 	emit: function(game, frac) {
 		var pos = physics.bodyPos(this.body, frac);
@@ -99,7 +191,12 @@ var Shot = {
 			angle: this.body.angle - Math.PI * 0.5,
 		});
 	},
-	onContact: function(game, eq, other) {
+	onContact: function(game, eq, body) {
+		spawn(game, {
+			type: 'Explosion',
+			position: this.body.position,
+			isEnemy: this.isEnemy,
+		});
 		destroy(this.body);
 	},
 	color: color.hex(0xffffff),
@@ -151,8 +248,8 @@ var Enemy = {
 
 // Index of all types.
 var Types = {
+	Explosion: Explosion,
 	Shot: Shot,
-
 	Enemy: Enemy,
 };
 
