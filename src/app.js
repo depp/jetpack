@@ -96,7 +96,6 @@ function render(curTime) {
 		lastResize = curTime;
 	}
 
-	handle = window.requestAnimationFrame(render);
 	gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
 	state.render({
 		time: curTime,
@@ -105,6 +104,9 @@ function render(curTime) {
 		height: gl.drawingBufferHeight,
 		aspect: w / h,
 	});
+
+	// Do this last... if we get an exception, it won't get called.
+	handle = window.requestAnimationFrame(render);
 }
 
 window.Game = {
