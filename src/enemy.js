@@ -31,7 +31,6 @@ var Enemy = {
 		body.addShape(shape);
 		this.body = body;
 		game.world.addBody(body);
-		this.health = this.initialHealth;
 	},
 	emit: function(game) {
 		game.sprites.add({

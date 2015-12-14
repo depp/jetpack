@@ -144,16 +144,24 @@ Game.prototype.step = function(dt) {
 	}
 
 	control.game.update();
+
 	ents = [];
 	for (i = 0; i < bodies.length; i++) {
 		e = bodies[i].entity;
-		if (e && e.step) {
+		if (e) {
 			ents.push(e);
 		}
 	}
+	var fr = this.time.frame;
 	for (i = 0; i < ents.length; i++) {
-		ents[i].step(this);
+		e = ents[i];
+		if (e.endFrame && fr >= e.endFrame) {
+			entity.destroy(e.body);
+		} else if (e.step) {
+			e.step(this);
+		}
 	}
+
 	this.world.step(dt);
 	this.camera.step();
 };

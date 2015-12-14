@@ -65,7 +65,7 @@ Time.prototype.update = function(curTime) {
 			console.warn('Lag');
 			this._step(curTime);
 			this.frac = 0;
-			this.elapsed = this._frame * this._dt;
+			this.elapsed = this.frame * this._dt;
 			return;
 		}
 		do {
@@ -75,7 +75,7 @@ Time.prototype.update = function(curTime) {
 
 	var frac = (curTime - this._step0) / (this._step1 - this._step0);
 	this.frac = Math.max(0, Math.min(1, frac));
-	this.elapsed = (this._frame + this.frac) * this._dt;
+	this.elapsed = (this.frame + this.frac) * this._dt;
 };
 
 /*
@@ -84,6 +84,8 @@ Time.prototype.update = function(curTime) {
  * time: The time at which the update takes place, in ms
  */
 Time.prototype._step = function(stepTime) {
+	this.frame++;
+	this.elapsed = this.frame * this._dt;
 	this._target.step(this._dt);
 	this._step0 = stepTime;
 	this._step1 = stepTime + this._dt * 1e3;

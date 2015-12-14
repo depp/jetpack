@@ -97,6 +97,7 @@ var Explosion = {
 			this.onContact = null;
 		}
 	},
+	lifespan: 0.25,
 };
 
 /*
@@ -185,6 +186,7 @@ var Shot = {
 	mass: 1,
 	speed: 30,
 	radius: 0.5,
+	lifespan: 2,
 };
 
 entity.registerTypes(null, {

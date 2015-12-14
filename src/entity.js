@@ -9,6 +9,7 @@ var glm = require('gl-matrix');
 var vec2 = glm.vec2;
 
 var color = require('./color');
+var param = require('./param');
 var physics = require('./physics');
 
 function destroy(body) {
@@ -52,6 +53,12 @@ function spawn(game, args) {
 	var cls = Types[type];
 	var obj = Object.create(cls);
 	obj.spawn(game, args);
+	if ('initialHealth' in obj) {
+		obj.health = obj.initialHealth;
+	}
+	if ('lifespan' in obj) {
+		obj.endFrame = game.time.frame + Math.ceil(obj.lifespan * param.Rate);
+	}
 }
 
 module.exports = {
