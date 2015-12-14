@@ -28,26 +28,26 @@ function getBobPos(obj, game) {
 
 /*
  * Item "corpse"
-*/
-var Corpse = {
-	spawn: function(game, args) {
-		var base = args.base;
-		this.body = base.body;
-		this.sprite = base.type.sprite;
-		this.bobShift = base.bobShift;
-		this.color = vec4.clone(base.type.color);
-		this.radius = 3;
-		_.forEach(this.body.shapes, function(s) {
-			s.contactGroup = 0;
-			s.contactMask = 0;
-		});
-		game.tween(this)
-			.to({
-				radius: ItemSize * 5,
-				color: color.Transparent
-			}, this.lifetime, 'SineIn')
-			.start();
-	},
+ */
+function Corpse(game, args) {
+	var base = args.base;
+	this.body = base.body;
+	this.sprite = base.type.sprite;
+	this.bobShift = base.bobShift;
+	this.color = vec4.clone(base.type.color);
+	this.radius = 3;
+	_.forEach(this.body.shapes, function(s) {
+		s.contactGroup = 0;
+		s.contactMask = 0;
+	});
+	game.tween(this)
+		.to({
+			radius: ItemSize * 5,
+			color: color.Transparent
+		}, this.lifetime, 'SineIn')
+		.start();
+}
+Corpse.prototype = {
 	emit: function(game) {
 		game.sprites.add({
 			position: getBobPos(this, game),
@@ -59,68 +59,57 @@ var Corpse = {
 	lifetime: 0.3,
 };
 
+/**********************************************************************/
+
 /*
  * Types of items we can pick up.
  */
-var Items = {
-	Weapon: {
-		color: color.White,
-		init: function(game) {
-			var tier = 1; //Math.random() < 0.3 ? 2 : 1;
-			this.weapon = weapon.getWeapon(tier);
-			this.sprite = this.weapon.sprite;
-		},
-		pickup: function(game, e) {
-			if (!e || !e.onGiveWeapon) {
-				return false;
-			}
-			e.onGiveWeapon(game, this.weapon);
-			return true;
-		},
-	},
-	Shield: {
-		color: color.White,
-		init: function(game) {},
-	},
-	Bonus: {
-		color: color.White,
-		init: function(game) {},
-	},
-	Death: {
-		color: color.Black,
-		init: function(game) {},
-	},
-	Speed: {
-		color: color.White,
-		init: function(game) {},
+
+function Weapon(game) {
+	var tier = 1; //Math.random() < 0.3 ? 2 : 1;
+	this.weapon = weapon.getWeapon(tier);
+	this.sprite = this.weapon.sprite;
+}
+
+Weapon.prototype = {
+	color: color.White,
+	pickup: function(game, e) {
+		if (!e || !e.onGiveWeapon) {
+			return false;
+		}
+		e.onGiveWeapon(game, this.weapon);
+		return true;
 	},
 };
+
+var Items = {
+	Weapon: Weapon,
+};
+
+/**********************************************************************/
 
 /*
  * Class for items we can pick up.
  */
-var Item = {
-	spawn: function(game, args) {
-		var position = args.position;
-		var body = new p2.Body({
-			position: args.position,
-			mass: this.mass,
-			fixedRotation: true,
-		});
-		var shape = new p2.Circle({
-			radius: ItemSize,
-			sensor: true,
-		});
-		shape.collisionGroup = physics.Mask.Item;
-		shape.collisionMask = physics.Mask.Player;
-		body.addShape(shape);
-		this.body = body;
-		this.bobShift = Math.random() * (Math.PI * 2);
-		var category = Items.Weapon;
-		var type = Object.create(category);
-		type.init(game);
-		this.type = type;
-	},
+function Item(game, args) {
+	var position = args.position;
+	var body = new p2.Body({
+		position: args.position,
+		mass: this.mass,
+		fixedRotation: true,
+	});
+	var shape = new p2.Circle({
+		radius: ItemSize,
+		sensor: true,
+	});
+	shape.collisionGroup = physics.Mask.Item;
+	shape.collisionMask = physics.Mask.Player;
+	body.addShape(shape);
+	this.body = body;
+	this.bobShift = Math.random() * (Math.PI * 2);
+	this.type = new Items.Weapon(game);
+}
+Item.prototype = {
 	emit: function(game) {
 		game.sprites.add({
 			position: getBobPos(this, game),
@@ -139,6 +128,8 @@ var Item = {
 		});
 	},
 };
+
+/**********************************************************************/
 
 entity.registerTypes({
 	Item: Item,
