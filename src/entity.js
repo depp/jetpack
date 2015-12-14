@@ -29,6 +29,13 @@ var Types = {};
 function registerTypes(types, category) {
 	var prefix = category ? category + '.' : '';
 	_.forOwn(types, function(value, key) {
+		var inh = value.inherit, i;
+		if (inh) {
+			for (i = 0; i < inh.length; i++) {
+				_.defaults(value, inh[i]);
+			}
+			delete value.inherit;
+		}
 		var tname = prefix + key;
 		if (Types.hasOwnProperty(tname)) {
 			console.error('Duplicate type registered: ' + tname);
