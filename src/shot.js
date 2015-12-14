@@ -50,27 +50,27 @@ function impactVector(vec, source, target, scale, jitter) {
  * position: vec2 position
  * radius: float explosion radius
  */
-var Explosion = {
-	spawn: function(game, args) {
-		var body = new p2.Body({
-			position: args.position,
-		});
-		var shape = new p2.Circle({
-			radius: args.radius,
-			sensor: true,
-		});
-		if (args.isEnemy) {
-			shape.collisionGroup = physics.Mask.Enemy;
-			shape.collisionMask = physics.Mask.Player;
-		} else {
-			shape.collisionGroup = physics.Mask.Player;
-			shape.collisionMask = physics.Mask.Enemy;
-		}
-		setTeam(shape, args.isEnemy);
-		body.addShape(shape);
-		this.body = body;
-		this.state = 0;
-	},
+function Explosion(game, args) {
+	var body = new p2.Body({
+		position: args.position,
+	});
+	var shape = new p2.Circle({
+		radius: args.radius,
+		sensor: true,
+	});
+	if (args.isEnemy) {
+		shape.collisionGroup = physics.Mask.Enemy;
+		shape.collisionMask = physics.Mask.Player;
+	} else {
+		shape.collisionGroup = physics.Mask.Player;
+		shape.collisionMask = physics.Mask.Enemy;
+	}
+	setTeam(shape, args.isEnemy);
+	body.addShape(shape);
+	this.body = body;
+	this.state = 0;
+}
+Explosion.prototype = {
 	emit: function(game) {
 		game.sprites.add({
 			position: this.body.interpolatedPosition,
@@ -98,8 +98,10 @@ var Explosion = {
 	lifespan: 0.25,
 };
 
+/**********************************************************************/
+
 /*
- * Base mixin for shots.
+ * Projectiles / shots.
  *
  * The 'target', 'direction', and 'angle' properties are exclusive.
  *
@@ -110,62 +112,62 @@ var Explosion = {
  * angle: Angle to fire at, float
  * isEnemy: True for enemy shots, false for player shots
  */
-var Shot = {
-	spawn: function(game, args) {
-		var source = args.source;
-		var dir = vec2.create(), speed = this.speed;
-		var angle, len2, hasDir = false;
-		// Prefer to use 'target'
-		if (!hasDir && args.hasOwnProperty('target')) {
-			vec2.subtract(dir, args.target, source.position);
-			len2 = vec2.squaredLength(dir);
-			if (len2 >= 0.01) {
-				hasDir = true;
-			}
+function Shot(game, args) {
+	var source = args.source;
+	var dir = vec2.create(), speed = this.speed;
+	var angle, len2, hasDir = false;
+	// Prefer to use 'target'
+	if (!hasDir && args.hasOwnProperty('target')) {
+		vec2.subtract(dir, args.target, source.position);
+		len2 = vec2.squaredLength(dir);
+		if (len2 >= 0.01) {
+			hasDir = true;
 		}
-		// Fall back on 'direction'
-		if (!hasDir && args.hasOwnProperty('direction')) {
-			vec2.copy(dir, args.direction);
-			len2 = vec2.squaredLength(dir);
-			if (len2 >= 0.01) {
-				hasDir = true;
-			}
+	}
+	// Fall back on 'direction'
+	if (!hasDir && args.hasOwnProperty('direction')) {
+		vec2.copy(dir, args.direction);
+		len2 = vec2.squaredLength(dir);
+		if (len2 >= 0.01) {
+			hasDir = true;
 		}
-		// Fall back on 'angle'
-		if (!hasDir) {
-			if (args.hasOwnProperty('angle')) {
-				angle = args.angle;
-			} else {
-				// Fall back on a random angle
-				angle = (2 * Math.random() - 1) * Math.PI;
-			}
-			dir[0] = Math.cos(angle);
-			dir[1] = Math.sin(angle);
+	}
+	// Fall back on 'angle'
+	if (!hasDir) {
+		if (args.hasOwnProperty('angle')) {
+			angle = args.angle;
 		} else {
-			angle = Math.atan2(dir[1], dir[0]);
-			vec2.scale(dir, dir, 1 / Math.sqrt(len2));
+			// Fall back on a random angle
+			angle = (2 * Math.random() - 1) * Math.PI;
 		}
-		var vel = vec2.create();
-		vec2.scale(vel, dir, speed);
-		vec2.add(vel, vel, source.velocity);
-		var pos = vec2.create();
-		vec2.scale(pos, dir, 1.0);
-		vec2.add(pos, pos, source.position);
-		var body = new p2.Body({
-			position: pos,
-			angle: angle,
-			velocity: vel,
-			mass: this.mass,
-			fixedRotation: true,
-			gravityScale: 0,
-			// ccdSpeedThreshold: 10,
-		});
-		var shape = new p2.Circle({ radius: this.radius });
-		setTeam(shape, args.isEnemy);
-		body.addShape(shape);
-		this.isEnemy = !!args.isEnemy;
-		this.body = body;
-	},
+		dir[0] = Math.cos(angle);
+		dir[1] = Math.sin(angle);
+	} else {
+		angle = Math.atan2(dir[1], dir[0]);
+		vec2.scale(dir, dir, 1 / Math.sqrt(len2));
+	}
+	var vel = vec2.create();
+	vec2.scale(vel, dir, speed);
+	vec2.add(vel, vel, source.velocity);
+	var pos = vec2.create();
+	vec2.scale(pos, dir, 1.0);
+	vec2.add(pos, pos, source.position);
+	var body = new p2.Body({
+		position: pos,
+		angle: angle,
+		velocity: vel,
+		mass: this.mass,
+		fixedRotation: true,
+		gravityScale: 0,
+		// ccdSpeedThreshold: 10,
+	});
+	var shape = new p2.Circle({ radius: this.radius });
+	setTeam(shape, args.isEnemy);
+	body.addShape(shape);
+	this.isEnemy = !!args.isEnemy;
+	this.body = body;
+}
+Shot.prototype = {
 	emit: function(game) {
 		game.sprites.add({
 			position: this.body.interpolatedPosition,
@@ -183,10 +185,15 @@ var Shot = {
 	lifespan: 2,
 };
 
+/**********************************************************************/
+
 /*
  * Mixin for shots that hurt on contact.
  */
-var PayloadSimple = {
+function SimplePayload(damage) {
+	this.damage = damage;
+}
+SimplePayload.prototype = {
 	onContact: function(game, eq, body) {
 		var e = body.entity;
 		if (e && e.onDamage) {
