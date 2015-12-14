@@ -73,12 +73,12 @@ function lerpArray(out, v0, v1, t) {
  * Get the interpolator for a value.
  */
 function interpolator(value) {
-	if (value instanceof Float32Array) {
+	if (value instanceof Float32Array || _.isArray(value)) {
 		return lerpArray;
 	} else if (typeof value == 'number') {
-		return lerpDiscrete;
+		return lerpNumber;
 	} else {
-		return lerpArray;
+		return lerpDiscrete;
 	}
 }
 
@@ -88,8 +88,11 @@ function interpolator(value) {
 function copy(value) {
 	if (value instanceof Float32Array) {
 		return new Float32Array(value);
+	} else if (_.isArray(value)) {
+		return value.slice();
+	} else {
+		return value;
 	}
-	return value;
 }
 
 /*
@@ -99,21 +102,28 @@ function copy(value) {
  * curTime: The current time
  * options: Tween options (only 'loop' is an option)
  */
-function Tween(target, initTime, props) {
-	this.done = false;
+function Tween(timeObj, timeProp, target, props) {
+	this._timeObj = timeObj;
+	this._timeProp = timeProp;
 	this.target = target;
+	this.done = true;
 	this._segs = [];
 	this._vals = {};
 	this._funcs = {};
-	this._time = initTime;
+	this._time = 0;
+	this._loop = false;
+	this.reset(props);
 }
 
 /*
  * Update the tween.
  */
 Tween.prototype.update = function(time) {
+	if (this.done) {
+		return;
+	}
 	var t, key, done, target = this.target;
-	for (; this._segs.length > 0; this._segs.shift()) {
+	while (this._segs.length > 0) {
 		var seg = this._segs[0];
 		if (time < seg.t0) {
 			return;
@@ -128,17 +138,45 @@ Tween.prototype.update = function(time) {
 			}
 			return;
 		}
-		for (key in seg.v1) {
-			target[key] = this._funcs[key](
-				target[key], undefined, seg.v1[key], 1);
+		if (seg.v1) {
+			for (key in seg.v1) {
+				target[key] = this._funcs[key](
+					target[key], undefined, seg.v1[key], 1);
+			}
 		}
 		if (seg.callback) {
 			seg.callback(target);
 		}
+		this._segs.shift();
+		if (this._loop) {
+			var dt = this._time - seg.t0;
+			seg.t0 += dt;
+			seg.t1 += dt;
+			this._time = seg.t1;
+			this._segs.push(seg);
+		}
 	}
-	if (time >= this._time) {
-		this.done = true;
+	this.done = true;
+	this._segs = [];
+	this._vals = {};
+	this._funcs = {};
+};
+
+/*
+ * Reset the tween.
+ */
+Tween.prototype.reset = function(props) {
+	var curTime = this._timeObj[this._timeProp];
+	if (!this.done) {
+		this.update(curTime);
 	}
+	this.done = false;
+	this._segs = [];
+	this._vals = {};
+	this._funcs = {};
+	this._time = curTime;
+	this._loop = props && !!props.loop;
+	return this;
 };
 
 /*
@@ -146,8 +184,11 @@ Tween.prototype.update = function(time) {
  */
 Tween.prototype.wait = function(duration) {
 	if (isNaN(duration)) {
-		this._time += Math.max(duration, 0);
+		duration = 0;
 	}
+	var t0 = this._time, t1 = Math.max(t0, t0 + duration);
+	this._segs.push({ t0: t0, t1: t1 });
+	this._time = t1;
 	return this;
 };
 
@@ -167,7 +208,7 @@ Tween.prototype.to = function(props, duration, ease) {
 		} else if (key in this.target) {
 			curValue = this.target[key];
 			if (!this.target.hasOwnProperty(key)) {
-				console.log('Warning: tweening an inherited property');
+				console.warn('Warning: tweening an inherited property');
 				this.target[key] = copy(curValue);
 			}
 			this._funcs[key] = interpolator(curValue);

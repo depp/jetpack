@@ -106,10 +106,16 @@ Game.prototype.render = function(r) {
 	var gl = r.gl;
 	this.time.update(r.time);
 	var frac = this.time.frac;
-	var bodies = this.world.bodies, i, b, e;
+	var bodies = this.world.bodies, i, b, e, tws, curTime;
 
 	this.sprites.clear();
 	this.lights.clearLocal();
+
+	curTime = this.time.elapsed;
+	tws = this._tweens;
+	for (i = 0; i < tws.length; i++) {
+		tws[i].update(curTime);
+	}
 
 	// If we relied on p2.js to manage update timing, then it would
 	// interpolate the positions for us.  We do it ourselves because
@@ -139,7 +145,7 @@ Game.prototype.render = function(r) {
  * dt: The timestep, in s
  */
 Game.prototype.step = function(dt) {
-	var bodies = this.world.bodies, i, ents, e, tws, tw, curTime;
+	var bodies = this.world.bodies, i, ents, e, tws;
 
 	if (this.camera._pos1[0] > this.buffers[1][0]) {
 		this.nextSegment();
@@ -164,12 +170,11 @@ Game.prototype.step = function(dt) {
 		}
 	}
 
-	curTime = this.time.elapsed;
 	tws = this._tweens;
 	for (i = tws.length; i > 0; i--) {
-		tw = tws[i - 1];
-		tw.update(curTime);
-		if (tw.done) {
+		e = tws[i - 1].target;
+		if (!e.body || !e.body.world) {
+			console.log('Killed a tween');
 			tws.splice(i - 1, 1);
 		}
 	}
@@ -229,9 +234,12 @@ Game.prototype.spawn = function(args) {
 
 /*
  * Create a tween.
+ *
+ * target: Entity to modify (must be an entity!)
+ * props: Options ('loop' is one)
  */
 Game.prototype.tween = function(target, props) {
-	var t = new tween.Tween(target, this.time.elapsed, props);
+	var t = new tween.Tween(this.time, 'elapsed', target, props);
 	this._tweens.push(t);
 	return t;
 };
