@@ -128,7 +128,7 @@ function isGrounded(world, body) {
 	}
 	var eqs = world.narrowphase.contactEquations;
 	var thresh = GroundThreshold;
-	for (var i = 0; i< eqs.length; i++){
+	for (var i = 0; i < eqs.length; i++){
 		var eq = eqs[i];
 		if (eq.bodyA === body) {
 			if (-eq.normalA[1] >= thresh) {
