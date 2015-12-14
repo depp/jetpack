@@ -56,6 +56,8 @@ var SpriteNames = {
 	PStand:   29,
 	PForward: 30,
 	PHurt:    31,
+	// Other
+	Reticle:  15,
 };
 
 /*

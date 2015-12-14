@@ -44,6 +44,7 @@ function Player(game, args) {
 	this.onGiveWeapon(game, weapon.getWeapon(0));
 }
 Player.prototype = {
+	team: 'player',
 	step: function(game) {
 		var ctl = control.game;
 		var vx = this.body.velocity[0], vy = this.body.velocity[1];

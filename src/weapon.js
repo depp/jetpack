@@ -14,6 +14,7 @@ var param = require('./param');
 var Tiers = [];
 
 var shotDir = vec2.create();
+var debugWeapon = null;
 
 function forwardDir(r, y) {
 	if (isNaN(y)) {
@@ -120,6 +121,9 @@ function createType(obj) {
 		Tiers.push([]);
 	}
 	Tiers[obj.tier].push(type);
+	if (obj.debug) {
+		debugWeapon = type;
+	}
 }
 
 /**********************************************************************/
@@ -175,16 +179,23 @@ createType({
 	},
 });
 
-if (false) {
-
-
 createType({
-	sprite: 'WHoming',
+	debug: true,
 	name: 'Homing Missiles',
 	tier: 1,
-	disabled: true,
+	sprite: 'WHoming',
+	init: function(game, player) {
+		this.action = new ActionAuto(3);
+	},
+	fire: function(game) {
+		game.spawn('Shot.HomingMissile', {
+			source: this.source,
+			direction: forwardDir(0.1),
+		});
+	},
 });
 
+if (false) {
 createType({
 	sprite: 'WItano',
 	name: 'Itano Battery',
@@ -234,6 +245,9 @@ createType({
  * tier: The weapon tier, a non-negative integer
  */
 function getWeapon(tier) {
+	if (debugWeapon) {
+		return debugWeapon;
+	}
 	tier = Math.max(0, Math.min(Tiers.length - 1, tier));
 	while (!Tiers[tier].length) {
 		tier--;

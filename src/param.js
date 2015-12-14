@@ -54,4 +54,7 @@ module.exports = {
 		// A little wider than the screen, so we can hide transitions
 		BufferWidth: 70,
 	},
+
+	// Maximum distance to scan for objects.
+	ScanDistance: 50,
 };

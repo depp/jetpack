@@ -13,6 +13,8 @@ var entity = require('./entity');
 var physics = require('./physics');
 var util = require('./util');
 
+var ReticleColor = color.rgb(0.9, 0.1, 0.1);
+
 function setTeam(shape, isEnemy) {
 	if (isEnemy) {
 		shape.collisionGroup = physics.Mask.Enemy;
@@ -107,9 +109,8 @@ Explosion.prototype = {
  *
  * Spawn properties:
  * source: A body
- * target: Target to aim at, vec2
  * direction: Direction to fire in, vec2
- * angle: Angle to fire at, float
+ * angle: Alternative to direction
  * isEnemy: True for enemy shots, false for player shots
  */
 function Shot(game, args, type) {
@@ -121,40 +122,19 @@ function Shot(game, args, type) {
 		lifespan: 2
 	});
 	var source = args.source;
-	var dir = vec2.create(), speed = type.speed;
-	var angle, len2, hasDir = false;
-	// Prefer to use 'target'
-	if (!hasDir && args.hasOwnProperty('target')) {
-		vec2.subtract(dir, args.target, source.position);
-		len2 = vec2.squaredLength(dir);
-		if (len2 >= 0.01) {
-			hasDir = true;
-		}
-	}
-	// Fall back on 'direction'
-	if (!hasDir && args.hasOwnProperty('direction')) {
-		vec2.copy(dir, args.direction);
-		len2 = vec2.squaredLength(dir);
-		if (len2 >= 0.01) {
-			hasDir = true;
-		}
-	}
-	// Fall back on 'angle'
-	if (!hasDir) {
-		if (args.hasOwnProperty('angle')) {
-			angle = args.angle;
-		} else {
-			// Fall back on a random angle
-			angle = (2 * Math.random() - 1) * Math.PI;
-		}
-		dir[0] = Math.cos(angle);
-		dir[1] = Math.sin(angle);
-	} else {
+	var dir = vec2.create(), angle;
+	if (args.hasOwnProperty('direction')) {
+		vec2.normalize(dir, args.direction);
 		angle = Math.atan2(dir[1], dir[0]);
-		vec2.scale(dir, dir, 1 / Math.sqrt(len2));
+	} else if (args.hasOwnProperty('angle')) {
+		angle = args.angle;
+		vec2.set(dir, Math.cos(angle), Math.sin(angle));
+	} else {
+		console.error('Bad direction');
+		return;
 	}
 	var vel = vec2.create();
-	vec2.scale(vel, dir, speed);
+	vec2.scale(vel, dir, type.speed);
 	vec2.add(vel, vel, source.velocity);
 	var pos = vec2.create();
 	vec2.scale(pos, dir, 1.0);
@@ -176,6 +156,11 @@ function Shot(game, args, type) {
 	this.type = type;
 }
 Shot.prototype = {
+	step: function(game) {
+		if (this.type.guidance) {
+			this.type.guidance.step(game, this);
+		}
+	},
 	emit: function(game) {
 		game.sprites.add({
 			position: this.body.interpolatedPosition,
@@ -184,6 +169,9 @@ Shot.prototype = {
 			sprite: this.type.sprite,
 			angle: this.body.interpolatedAngle - Math.PI * 0.5,
 		});
+		if (this.type.guidance) {
+			this.type.guidance.emit(game, this);
+		}
 	},
 	onContact: function(game, eq, body) {
 		this.type.payload.onContact(game, eq, body, this);
@@ -194,7 +182,7 @@ Shot.prototype = {
 /**********************************************************************/
 
 /*
- * Mixin for shots that hurt on contact.
+ * Component for shots that hurt on contact.
  */
 function SimplePayload(damage) {
 	this.damage = damage;
@@ -210,7 +198,7 @@ SimplePayload.prototype = {
 };
 
 /*
- * Mixin for shots that explode on contact.
+ * Component for shots that explode on contact.
  */
 function ExplosivePayload(shot, damage) {
 	this.shot = shot;
@@ -225,6 +213,41 @@ ExplosivePayload.prototype = {
 		}));
 		entity.destroy(shot.body);
 	},
+};
+
+/*
+ * Component for shots that home in on targets.
+ */
+function Homing(game, args) {
+	this.hasTarget = false;
+}
+Homing.prototype = {
+	step: function(game, shot) {
+		if (!this.hasTarget) {
+			this.hasTarget = true;
+			var body = shot.body;
+			var target = game.scan({
+				team: shot.isEnemy ? 'player' : 'enemy',
+				position: body.position,
+				angel: body.angle,
+			});
+			if (target) {
+				shot.targetLock = target;
+			}
+		}
+	},
+	emit: function(game, shot) {
+		var target = shot.targetLock;
+		if (!target || !target.body) {
+			return;
+		}
+		game.sprites.add({
+			position: target.body.interpolatedPosition,
+			radius: 2.0,
+			color: ReticleColor,
+			sprite: 'Reticle',
+		});
+	}
 };
 
 /**********************************************************************/
@@ -247,9 +270,20 @@ function Rocket(game, args) {
 	});
 }
 
+function HomingMissile(game, args) {
+	return new Shot(game, args, {
+		guidance: new Homing(game, args),
+		payload: new ExplosivePayload(2),
+		color: color.hex(0xffffff),
+		sprite: 'SRocket2',
+		speed: 32,
+	});
+}
+
 /**********************************************************************/
 
 entity.registerTypes({
 	Bullet: Bullet,
 	Rocket: Rocket,
+	HomingMissile: HomingMissile,
 }, 'Shot');

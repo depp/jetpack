@@ -61,6 +61,7 @@ function Game() {
 	}]);
 
 	// Physics engine and entities
+	this.teams = {player: [], enemy: []};
 	this.world = new p2.World();
 	this.camera = new camera.Camera({
 		leading: g.Leading / g.Speed,
@@ -112,7 +113,6 @@ Game.prototype.render = function(r) {
 	this.lights.clearLocal();
 	this._tweens.update(this.time.elapsed);
 
-
 	// If we relied on p2.js to manage update timing, then it would
 	// interpolate the positions for us.  We do it ourselves because
 	// p2.js does not expose the interface.  I should file an
@@ -125,7 +125,12 @@ Game.prototype.render = function(r) {
 		}
 		vec2.lerp(b.interpolatedPosition, b.previousPosition, b.position, frac);
 		b.interpolatedAngle = b.previousAngle + frac * (b.angle - b.previousAngle);
-		e.emit(this);
+	}
+	for (i = 0; i < bodies.length; i++) {
+		e = bodies[i].entity;
+		if (e && e.emit) {
+			e.emit(this);
+		}
 	}
 
 	this.camera.update(r, frac);
@@ -141,7 +146,7 @@ Game.prototype.render = function(r) {
  * dt: The timestep, in s
  */
 Game.prototype.step = function(dt) {
-	var bodies = this.world.bodies, i, ents, e;
+	var bodies = this.world.bodies, i, ents, e, team, lock;
 
 	if (this.camera._pos1[0] > this.buffers[1][0]) {
 		this.nextSegment();
@@ -153,18 +158,44 @@ Game.prototype.step = function(dt) {
 	this._tweens.updateTime(this.time.elapsed);
 
 	ents = [];
+	_.forOwn(this.teams, function(value) { value.length = 0; });
+	// Get all entities, discard expired entities, assign to teams
+	var fr = this.time.frame;
 	for (i = 0; i < bodies.length; i++) {
 		e = bodies[i].entity;
 		if (e) {
-			ents.push(e);
+			if (e.endFrame && fr >= e.endFrame) {
+				entity.destroy(e.body);
+			} else {
+				ents.push(e);
+				if (e.team) {
+					this.teams[e.team].push(e);
+				}
+			}
 		}
 	}
-	var fr = this.time.frame;
+	// Update lock count on enemies
+	team = this.teams.enemy;
+	for (i = 0; i < team.length; i++) {
+		team[i].lockCount = 0;
+	}
 	for (i = 0; i < ents.length; i++) {
 		e = ents[i];
-		if (e.endFrame && fr >= e.endFrame) {
-			entity.destroy(e.body);
-		} else if (e.step) {
+		lock = e.targetLock;
+		if (lock) {
+			if (!lock.body || !lock.body.world) {
+				e.targetLock = null;
+			} else {
+				if (lock.team == 'enemy') {
+					lock.lockCount++;
+				}
+			}
+		}
+	}
+	// Advance all entities one step
+	for (i = 0; i < ents.length; i++) {
+		e = ents[i];
+		if (e.step) {
 			e.step(this);
 		}
 	}
@@ -245,6 +276,66 @@ Game.prototype.spawnObj = function(ent) {
 	if ('lifespan' in ent) {
 		ent.endFrame = this.time.frame + Math.ceil(ent.lifespan * param.Rate);
 	}
+};
+
+/*
+ * Scan for a member of the given team.
+ *
+ * options.team: The team to search for
+ * options.position: Position to start searching
+ * options.direction: Direction to favor in search
+* options.angle
+ */
+Game.prototype.scan = function(options) {
+	var team = this.teams[options.team];
+	if (team.length === 0) {
+		console.log('Nothing to scan for');
+		return null;
+	}
+
+	var pos = options.position;
+	var delta = vec2.create();
+	var dir = vec2.create();
+	if (options.hasOwnProperty('direction')) {
+		vec2.normalize(dir, options.direction);
+	} else if (options.hasOwnProperty('angle')) {
+		vec2.set(
+			dir, Math.cos(options.angle), Math.sin(options.angle));
+	}
+	var maxDist2 = param.ScanDistance * param.ScanDistance;
+
+	function evaluate(ent) {
+		if (!ent.body || !ent.body.world) {
+			return Infinity;
+		}
+		vec2.subtract(delta, ent.body.position, pos);
+		var dist2 = vec2.squaredLength(delta);
+		if (dist2 > maxDist2) {
+			return Infinity;
+		}
+		var dist = Math.sqrt(dist2);
+		var value = (dist + 10) * (2 - vec2.dot(delta, dir) / dist);
+		if (ent.lockCount) {
+			value *= 1 + 0.5 * ent.lockCount;
+		}
+		// console.log('VALUE', value);
+		return value;
+	}
+	var best = team.length > 1 ? _.min(team, evaluate) : team[0];
+	var value = evaluate(best);
+	if (!isFinite(value) && value > 0) {
+		console.log('Nothing found (scanned: ' + team.length + ')');
+		return null;
+	}
+	// console.log('Found value = ' + value);
+	if (best.team == 'enemy') {
+		if (!best.hasOwnProperty('lockCount')) {
+			log.error('no lock count');
+		} else {
+			best.lockCount++;
+		}
+	}
+	return best;
 };
 
 /*

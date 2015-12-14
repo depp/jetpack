@@ -55,10 +55,10 @@ function Enemy(game, args, type) {
 	var body = new p2.Body({
 		position: args.position,
 		angle: Math.PI * 0.5,
-		mass: this.mass,
+		mass: type.mass,
 		gravityScale: 0,
 	});
-	var shape = new p2.Circle({ radius: this.radius });
+	var shape = new p2.Circle({ radius: 1 });
 	shape.collisionGroup = physics.Mask.Enemy;
 	shape.collisionMask = physics.Mask.World | physics.Mask.Player;
 	body.addShape(shape);
@@ -67,6 +67,7 @@ function Enemy(game, args, type) {
 	this.color = vec4.clone(type.color);
 	this.type = type;
 	this.health = type.health;
+	this.lockCount = 0;
 }
 Enemy.prototype = {
 	emit: function(game) {
@@ -90,13 +91,7 @@ Enemy.prototype = {
 	die: function(game) {
 		game.spawnObj(new Corpse(game, this.body, this.type));
 	},
-	baseColor: color.hex(0x808080),
-	sprite: {
-		color: color.Gray,
-		sprite: 'PHurt',
-	},
-	mass: 5,
-	radius: 1,
+	team: 'enemy',
 };
 
 var Enemies = {
