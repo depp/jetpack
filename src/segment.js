@@ -516,7 +516,7 @@ function makeSegment(game, type) {
 		for (var i = 0; i < 5; i++) {
 			game.spawn({
 				type: 'Enemy',
-				position: [x - i * 3, 5],
+				position: [x - i * 3, -5],
 			});
 		}
 		game.spawn({
