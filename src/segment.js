@@ -5,6 +5,9 @@
    terms of the MIT license.  See LICENSE.txt for details. */
 'use strict';
 
+var glm = require('gl-matrix');
+var vec4 = glm.vec4;
+
 var color = require('./color');
 var param = require('./param');
 var physics = require('./physics');
@@ -81,7 +84,7 @@ Border.prototype.emitBody = function(world, yLimit) {
  * Emit the border tile graphics.
  */
 Border.prototype.emitTiles = function(tiles, baseColor) {
-	var tileColor = new Float32Array(4);
+	var tileColor = vec4.create();
 	var remW = Math.floor((1 + this.x1 - this.x0) * 0.5);
 	var x = this.x0, y = this.y, dirY = this.isCeiling ? +1 : -1;
 	if (this.isBuffer) {
