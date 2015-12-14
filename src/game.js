@@ -69,6 +69,7 @@ function Game() {
 	this.nextSegment();
 	physics.settle(this.world, 1 / param.Rate, 3.0);
 	this.camera.reset();
+	this.world.on("beginContact", this._beginContact.bind(this));
 }
 
 /*
@@ -130,19 +131,6 @@ Game.prototype.step = function(dt) {
 
 	control.game.update();
 	this.player.step(this);
-
-	var eqs = this.world.narrowphase.contactEquations;
-	for (i = 0; i < eqs.length; i++){
-		var eq = eqs[i];
-		var eA = eq.bodyA.entity, eB = eq.bodyB.entity;
-		if (eA) {
-			eA.collide(this, eq, eB);
-		}
-		if (eB) {
-			eB.collide(this, eq, eA);
-		}
-	}
-
 	this.world.step(dt);
 	this.camera.step();
 };
@@ -164,6 +152,18 @@ Game.prototype.nextSegment = function() {
 	this.world.addBody(this.player.body);
 	this.background.addOffset(offset);
 	this.camera.addOffset(offset);
+};
+
+Game.prototype._beginContact = function(evt) {
+	var e1 = evt.bodyA.entity || null;
+	var e2 = evt.bodyB.entity || null;
+	var eq = evt.contactEquations;
+	if (e1 && e1.onContact) {
+		e1.onContact(this, eq, e2);
+	}
+	if (e2 && e2.onContact) {
+		e2.onContact(this, eq, e1);
+	}
 };
 
 /*

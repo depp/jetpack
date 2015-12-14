@@ -99,7 +99,7 @@ var Shot = {
 			angle: this.body.angle - Math.PI * 0.5,
 		});
 	},
-	collide: function(game, eq, other) {
+	onContact: function(game, eq, other) {
 		destroy(this.body);
 	},
 	color: color.hex(0xffffff),
@@ -143,7 +143,6 @@ var Enemy = {
 			angle: this.body.angle - Math.PI * 0.5,
 		});
 	},
-	collide: function(game, eq, other) {},
 	color: color.hex(0xffffff),
 	sprite: 'PHurt',
 	mass: 5,
