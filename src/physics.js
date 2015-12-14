@@ -49,15 +49,6 @@ var Mask = {
 */
 
 /*
- * Calculate the interpolated position of a body.
- */
-function bodyPos(body, frac) {
-	// P2 can do this for us, but we will figure that out later.
-	var p = body.position, pp = body.previousPosition;
-	return [pp[0] + (p[0] - pp[0]) * frac, pp[1] + (p[1] - pp[1]) * frac];
-}
-
-/*
  * Reset the world.
  */
 function resetWorld(world) {
@@ -144,7 +135,6 @@ function isGrounded(world, body) {
 module.exports = {
 	Material: Material,
 	Mask: Mask,
-	bodyPos: bodyPos,
 	resetWorld: resetWorld,
 	settle: settle,
 	isGrounded: isGrounded,
