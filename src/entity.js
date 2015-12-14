@@ -17,13 +17,14 @@ function destroy(body) {
 	}
 }
 
+
+
 /*
  * Base mixin for shots.
  *
  * The 'target', 'direction', and 'angle' properties are exclusive.
  *
  * Spawn properties:
- * type: Shot type
  * source: A body
  * target: Target to aim at, vec2
  * direction: Direction to fire in, vec2
@@ -108,9 +109,52 @@ var Shot = {
 	radius: 0.5,
 };
 
+/*
+ * Base mixin for enemies.
+ *
+ * Spawn properties:
+ * position: Enemy position
+ */
+var Enemy = {
+	spawn: function(game, args) {
+		var position = args.position;
+		var body = new p2.Body({
+			position: args.position,
+			angle: Math.PI * 0.5,
+			mass: this.mass,
+			gravityScale: 0,
+		});
+		var shape = new p2.Circle({ radius: this.radius });
+		shape.collisionGroup = physics.Mask.Enemy;
+		shape.collisionMask = physics.Mask.World | physics.Mask.Player;
+		body.entity = this;
+		body.addShape(shape);
+		this.body = body;
+		game.world.addBody(body);
+	},
+	emit: function(game, frac) {
+		var pos = physics.bodyPos(this.body, frac);
+		game.sprites.add({
+			x: pos[0],
+			y: pos[1],
+			radius: 1.5,
+			color: this.color,
+			sprite: this.sprite,
+			angle: this.body.angle - Math.PI * 0.5,
+		});
+	},
+	collide: function(game, eq, other) {},
+	color: color.hex(0xffffff),
+	sprite: 'PHurt',
+	mass: 5,
+	radius: 1,
+};
+
 // Index of all types.
 var Types = {
 	Shot: Shot,
+
+	Enemy: Enemy,
 };
 
 /*

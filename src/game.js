@@ -60,7 +60,6 @@ function Game() {
 		offsetX: 20,
 	});
 	this.buffers = null;
-	this.enemies = null;
 }
 
 /*
@@ -93,7 +92,6 @@ Game.prototype.render = function(r) {
 	this.camera.update(r, frac);
 	this.sprites.clear();
 	this.lights.clearLocal();
-	this.enemies.emit(this, frac);
 	var b = this.world.bodies, i;
 	for (i = 0; i < b.length; i++) {
 		var e = b[i].entity;
@@ -128,7 +126,6 @@ Game.prototype.step = function(dt) {
 
 	control.game.update();
 	this.player.step(this);
-	this.enemies.step(this);
 
 	var eqs = this.world.narrowphase.contactEquations;
 	for (i = 0; i < eqs.length; i++){
