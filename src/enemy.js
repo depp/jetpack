@@ -32,7 +32,7 @@ var Corpse = {
 		body.mass *= 0.5;
 		body.updateMassProperties();
 		_.forEach(body.shapes, function(s) {
-			s.material = physics.Material.Bouncy
+			s.material = physics.Material.Bouncy;
 		});
 		this.body = body;
 		this.sprite = args.sprite;
