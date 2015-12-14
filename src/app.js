@@ -106,7 +106,10 @@ function render(curTime) {
 	});
 
 	// Do this last... if we get an exception, it won't get called.
-	handle = window.requestAnimationFrame(render);
+	// Don't do it if we've canceled.
+	if (handle) {
+		handle = window.requestAnimationFrame(render);
+	}
 }
 
 window.Game = {
