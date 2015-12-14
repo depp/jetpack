@@ -63,6 +63,7 @@ var Player = {
 			game.spawn({
 				type: 'Shot',
 				source: this.body,
+				angle: Math.PI * (0.4 + 0.2 * Math.random()),
 			});
 		}
 	},
