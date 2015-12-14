@@ -64,29 +64,35 @@ var Corpse = {
  */
 var Items = {
 	Weapon: {
+		color: color.White,
 		init: function(game) {
 			var tier = 1; //Math.random() < 0.3 ? 2 : 1;
 			this.weapon = weapon.getWeapon(tier);
-			console.log(this.weapon);
 			this.sprite = this.weapon.sprite;
 		},
-		color: color.White,
+		pickup: function(game, e) {
+			if (!e || !e.onGiveWeapon) {
+				return false;
+			}
+			e.onGiveWeapon(game, this.weapon);
+			return true;
+		},
 	},
 	Shield: {
-		init: function(game) {},
 		color: color.White,
+		init: function(game) {},
 	},
 	Bonus: {
-		init: function(game) {},
 		color: color.White,
+		init: function(game) {},
 	},
 	Death: {
-		init: function(game) {},
 		color: color.Black,
+		init: function(game) {},
 	},
 	Speed: {
-		init: function(game) {},
 		color: color.White,
+		init: function(game) {},
 	},
 };
 
@@ -124,7 +130,9 @@ var Item = {
 		});
 	},
 	onContact: function(game, eq, body) {
-		console.log('PICKUP');
+		if (!this.type.pickup(game, body.entity)) {
+			return;
+		}
 		game.spawn({
 			type: Corpse,
 			base: this,

@@ -13,6 +13,7 @@ var control = require('./control');
 var entity = require('./entity');
 var param = require('./param');
 var physics = require('./physics');
+var weapon = require('./weapon');
 
 var PlayerColor = color.rgb(1, 0, 0.5);
 
@@ -41,6 +42,7 @@ var Player = {
 		this._jetForceForward = g.Speed * g.Speed * g.Drag;
 		this._isFlying = false;
 		game.camera.set({ target: body });
+		this.onGiveWeapon(game, weapon.getWeapon(0));
 	},
 	step: function(game) {
 		var ctl = control.game;
@@ -58,12 +60,8 @@ var Player = {
 			fx += this._jetForceForward;
 		}
 		this.body.applyForce([fx, fy]);
-		if (ctl.fire.press) {
-			game.spawn({
-				type: 'Shot.Bullet',
-				source: this.body,
-				angle: Math.PI * (0.4 + 0.2 * Math.random()),
-			});
+		if (this.weapon) {
+			this.weapon.step(game, this);
 		}
 	},
 	emit: function(game) {
@@ -80,6 +78,9 @@ var Player = {
 			position: pos,
 			height: 2,
 		});
+	},
+	onGiveWeapon: function(game, w) {
+		this.weapon = w.create(game, this);
 	},
 	// Always keep player across level transitions
 	alwaysKeep: true,
