@@ -65,7 +65,7 @@ var Corpse = {
 var Items = {
 	Weapon: {
 		init: function(game) {
-			var tier = Math.random() < 0.3 ? 2 : 1;
+			var tier = 1; //Math.random() < 0.3 ? 2 : 1;
 			this.weapon = weapon.getWeapon(tier);
 			console.log(this.weapon);
 			this.sprite = this.weapon.sprite;

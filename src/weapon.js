@@ -24,6 +24,9 @@ WeaponType.prototype.create = function(game) {
  * sprite: Weapon sprite
  */
 function createType(obj) {
+	if (!obj.enabled) {
+		return;
+	}
 	var info = new WeaponType();
 	info.sprite = obj.sprite;
 	info._obj = obj;
@@ -47,6 +50,7 @@ createType({
 	sprite: 'WTriple',
 	name: 'Triple Machine Gun',
 	tier: 1,
+	enabled: true,
 });
 
 /**********************************************************************/
@@ -57,6 +61,7 @@ createType({
 	sprite: 'WRocket',
 	name: 'Rocket Launcher',
 	tier: 1,
+	enabled: false,
 });
 
 createType({
@@ -64,6 +69,7 @@ createType({
 	sprite: 'WHoming',
 	name: 'Homing Missiles',
 	tier: 1,
+	enabled: false,
 });
 
 createType({
@@ -71,6 +77,7 @@ createType({
 	sprite: 'WItano',
 	name: 'Itano Battery',
 	tier: 2,
+	enabled: false,
 });
 
 /**********************************************************************/
@@ -81,6 +88,7 @@ createType({
 	sprite: 'WSingle',
 	name: 'Laser Cannon',
 	tier: 1,
+	enabled: false,
 });
 
 createType({
@@ -88,6 +96,7 @@ createType({
 	sprite: 'WReaper',
 	name: 'Reaper Laser',
 	tier: 2,
+	enabled: false,
 });
 
 /**********************************************************************/
@@ -98,6 +107,7 @@ createType({
 	sprite: 'WSnake',
 	name: 'S.N.A.K.E. Launcher',
 	tier: 2,
+	enabled: false,
 });
 
 createType({
@@ -105,6 +115,7 @@ createType({
 	sprite: 'WWave',
 	name: 'Giga Wave Cannon',
 	tier: 2,
+	enabled: false,
 });
 
 /**********************************************************************/
