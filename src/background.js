@@ -86,6 +86,9 @@ Background.prototype.setGrid = function() {
 
 // Add an offset to the background
 Background.prototype.addOffset = function(offset) {
+	if (!this._filter) {
+		return;
+	}
 	vec2.subtract(this._filter.offset, this._filter.offset, offset);
 };
 

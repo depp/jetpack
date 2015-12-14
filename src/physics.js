@@ -58,17 +58,15 @@ function bodyPos(body, frac) {
 }
 
 /*
- * Create a new world.
+ * Reset the world.
  */
-function createWorld() {
+function resetWorld(world) {
 	var g = param.Game, i;
-	var world = new p2.World({
-		gravity: [0, -g.Gravity]
-	});
+	world.clear();
+	world.gravity[1] = - g.Gravity;
 	for (i = 0; i < Contact.length; i++) {
 		world.addContactMaterial(Contact[i]);
 	}
-	return world;
 }
 
 /*
@@ -147,7 +145,7 @@ module.exports = {
 	Material: Material,
 	Mask: Mask,
 	bodyPos: bodyPos,
-	createWorld: createWorld,
+	resetWorld: resetWorld,
 	settle: settle,
 	isGrounded: isGrounded,
 };

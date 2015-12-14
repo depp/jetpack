@@ -53,13 +53,22 @@ function Game() {
 	}]);
 
 	// Physics engine and entities
-	this.world = null;
-	this.player = null;
+	this.world = new p2.World();
+	this.player = new player.Player({
+		position: [0, -param.Level.MaxGap * 0.5 + 1],
+	});
 	this.camera = new camera.Camera({
 		leading: g.Leading / g.Speed,
 		offsetX: 20,
+		target: this.player.body,
 	});
-	this.buffers = null;
+	this.buffers = [
+		vec2.create(),
+		vec2.create(),
+	];
+	this.nextSegment();
+	physics.settle(this.world, 1 / param.Rate, 3.0);
+	this.camera.reset();
 }
 
 /*
@@ -116,12 +125,8 @@ Game.prototype.step = function(dt) {
 	var i;
 	this._killList = [];
 
-	if (!this.world) {
-		this.nextSegment(true);
-	} else {
-		if (this.camera._pos1[0] > this.buffers[1][0]) {
-			this.nextSegment(false);
-		}
+	if (this.camera._pos1[0] > this.buffers[1][0]) {
+		this.nextSegment(false);
 	}
 
 	control.game.update();
@@ -141,41 +146,25 @@ Game.prototype.step = function(dt) {
 
 	this.world.step(dt);
 	this.camera.step();
-
-	for (i = 0; i < this._killList.length; i++) {
-		var b = this._killList[i];
-		if (b.world) {
-
-		}
-	}
 };
 
 /*
  * Transition to the next segment.
  */
-Game.prototype.nextSegment = function(isFirst) {
-	var offset, b;
-	if (isFirst) {
-		this.player = new player.Player();
-		offset = [0, -param.Level.MaxGap * 0.5 + 1];
-	} else {
-		b = this.buffers[1];
-		offset = [-b[0], -b[1]];
-	}
-	this.world = physics.createWorld();
+Game.prototype.nextSegment = function() {
+	console.log('Next segment');
+	var offset = vec2.create(), b;
+	physics.resetWorld(this.world);
+	vec2.subtract(offset, offset, this.buffers[1]);
 	segment.makeSegment(this, util.randInt(0, 2));
-	b = this.buffers[0];
-	offset[0] += b[0];
-	offset[1] += b[1];
-	this.player.addToWorld(this.world, offset);
-	this.camera.set({ target: this.player.body });
-	if (isFirst) {
-		physics.settle(this.world, 1 / param.Rate, 3.0);
-		this.camera.reset();
-	} else {
-		this.background.addOffset(offset);
-		this.camera.addOffset(offset);
-	}
+	vec2.add(offset, offset, this.buffers[0]);
+	vec2.add(
+		this.player.body.position,
+		this.player.body.position,
+		offset);
+	this.world.addBody(this.player.body);
+	this.background.addOffset(offset);
+	this.camera.addOffset(offset);
 };
 
 /*

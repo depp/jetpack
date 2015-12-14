@@ -16,47 +16,25 @@ var PlayerColorU32 = color.rgb.apply(null, PlayerColor);
 /*
  * Player object.
  */
-function Player() {
+function Player(args) {
 	var g = param.Game;
-	this.body = null;
-	this._drag = g.Drag;
-	this._jetForceUp = g.Mass * g.Jetpack;
-	this._jetForceForward = g.Speed * g.Speed * g.Drag;
-	this._isFlying = false;
-}
 
-/*
- * Add the player to the world.
- *
- * For the first segment, the offset is just the entry point.  For
- * later segments, the offset is the conversion between the previous
- * world and the new world.
- *
- * world: The P2 world
- * offset: The offset where the player should be added
- */
-Player.prototype.addToWorld = function(world, offset) {
-	var g = param.Game;
-	var pos = [offset[0], offset[1]];
-	var vel = [0, 0];
-	if (this.body) {
-		pos[0] += this.body.position[0];
-		pos[1] += this.body.position[1];
-		vel = [this.body.velocity[0], this.body.velocity[1]];
-	}
 	this.body = new p2.Body({
 		mass: g.Mass,
-		position: pos,
+		position: args.position,
 		fixedRotation: true,
-		velocity: vel,
 	});
 	var shape = new p2.Circle({ radius: 1 });
 	shape.material = physics.Material.Player;
 	shape.collisionGroup = physics.Mask.Player;
 	shape.collisionMask = physics.Mask.World | physics.Mask.Enemy;
 	this.body.addShape(shape);
-	world.addBody(this.body);
-};
+
+	this._drag = g.Drag;
+	this._jetForceUp = g.Mass * g.Jetpack;
+	this._jetForceForward = g.Speed * g.Speed * g.Drag;
+	this._isFlying = false;
+}
 
 /*
  * Advance by one frame.
