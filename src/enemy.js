@@ -149,6 +149,6 @@ var Enemies = {
 	},
 };
 
-entity.registerTypes(null, {
+entity.registerTypes({
 	Enemy: Enemy
 });

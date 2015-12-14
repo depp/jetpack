@@ -185,7 +185,7 @@ var Shot = {
 	lifespan: 2,
 };
 
-entity.registerTypes(null, {
+entity.registerTypes({
 	Explosion: Explosion,
 	Shot: Shot,
 });

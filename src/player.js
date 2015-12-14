@@ -85,6 +85,6 @@ var Player = {
 	alwaysKeep: true,
 };
 
-entity.registerTypes(null, {
+entity.registerTypes({
 	Player: Player,
 });

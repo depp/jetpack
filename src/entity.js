@@ -26,7 +26,7 @@ var Types = {};
  * category: The category name, or null.
  * types: Mapping from type names to types
  */
-function registerTypes(category, types) {
+function registerTypes(types, category) {
 	var prefix = category ? category + '.' : '';
 	_.forOwn(types, function(value, key) {
 		var tname = prefix + key;

@@ -98,6 +98,6 @@ var Item = {
 	sprite: 'PHurt',
 };
 
-entity.registerTypes(null, {
+entity.registerTypes({
 	Item: Item,
 });
