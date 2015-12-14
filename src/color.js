@@ -35,7 +35,7 @@ function rgb(r, g, b) {
  * Create an RGBA color vector.
  */
 function rgba(r, g, b, a) {
-	return vec4.fromValues(r, g, b, a);
+	return vec4.fromValues(r * a, g * a, b * a, a);
 }
 
 /*
@@ -111,4 +111,5 @@ module.exports = {
 	White: rgb(1, 1, 1),
 	Gray: rgb(0.5, 0.5, 0.5),
 	Black: rgb(0, 0, 0),
+	Transparent: rgba(0, 0, 0, 0),
 };
