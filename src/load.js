@@ -28,7 +28,6 @@ function loadImages(assetInfo, func) {
 	_.forOwn(info, function(path, name) {
 		var img = new Image();
 		img.addEventListener('load', function() {
-			console.log('Loaded: ' + name);
 			loaded++;
 			if (loaded >= count) {
 				func();
