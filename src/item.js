@@ -35,15 +35,12 @@ var Item = {
 		body.entity = this;
 		body.addShape(shape);
 		this.body = body;
-		this.bob = -1;
-		game.tween(this, { loop: true })
-			.to({ bob: +1 }, 0.5 * BobPeriod, 'SineInOut')
-			.to({ bob: -1 }, 0.5 * BobPeriod, 'SineInOut');
 		this.pos = vec2.create();
 	},
 	emit: function(game) {
 		vec2.copy(this.pos, this.body.interpolatedPosition);
-		this.pos[1] += this.bob * (0.5 * BobDistance);
+		this.pos[1] += (0.5 * BobDistance) *
+			Math.sin(game.time.elapsed * (2 * Math.PI / BobPeriod));
 		game.sprites.add({
 			position: this.pos,
 			radius: 3,
