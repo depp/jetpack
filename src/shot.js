@@ -165,19 +165,11 @@ var Shot = {
 			position: this.body.interpolatedPosition,
 			radius: 1.5,
 			color: this.color,
-			sprite: 'SRocket2',
+			sprite: this.sprite,
 			angle: this.body.interpolatedAngle - Math.PI * 0.5,
 		});
 	},
-	onContact: function(game, eq, body) {
-		entity.spawn(game, {
-			type: 'Explosion',
-			position: this.body.position,
-			isEnemy: this.isEnemy,
-		});
-		entity.destroy(this.body);
-	},
-	color: color.hex(0xffffff),
+	color: null,
 	sprite: null,
 	mass: 1,
 	speed: 30,
@@ -185,7 +177,46 @@ var Shot = {
 	lifespan: 2,
 };
 
+/*
+ * Mixin for shots that hurt on contact.
+ */
+var PayloadSimple = {
+	onContact: function(game, eq, body) {
+		var e = body.entity;
+		if (e && e.onDamage) {
+			e.onDamage(game, 1);
+		}
+		entity.destroy(this.body);
+	},
+};
+
+/*
+ * Mixin for shots that explode on contact.
+ */
+var PayloadExplosion = {
+	onContact: function(game, eq, body) {
+		entity.spawn(game, {
+			type: Explosion,
+			position: this.body.position,
+			isEnemy: this.isEnemy,
+		});
+		entity.destroy(this.body);
+	},
+};
+
+var Bullet = {
+	inherit: [Shot, PayloadSimple],
+	color: color.hex(0xffffff),
+	sprite: 'SDot',
+};
+
+var Rocket = {
+	inherit: [Shot, PayloadExplosion],
+	color: color.hex(0xffffff),
+	sprite: 'SRocket2',
+};
+
 entity.registerTypes({
-	Explosion: Explosion,
-	Shot: Shot,
-});
+	Bullet: Bullet,
+	Rocket: Rocket,
+}, 'Shot');

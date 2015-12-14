@@ -60,7 +60,7 @@ var Player = {
 		this.body.applyForce([fx, fy]);
 		if (ctl.fire.press) {
 			game.spawn({
-				type: 'Shot',
+				type: 'Shot.Bullet',
 				source: this.body,
 				angle: Math.PI * (0.4 + 0.2 * Math.random()),
 			});
