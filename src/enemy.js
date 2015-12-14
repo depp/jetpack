@@ -368,7 +368,7 @@ var Enemies = {
 	Horiz: Horiz,
 	Diamond: Diamond,
 	Star: Star,
-	Ace: Ace,
+	// Ace: Ace, unimplemented
 	Silo: Silo,
 	Turret: Turret,
 };
