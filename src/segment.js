@@ -490,19 +490,57 @@ Segment.prototype.emit = function(game) {
 	}
 };
 
+function genPoints(x0, x1, dist, func, thisArg) {
+	var n = Math.ceil(
+		(x1 - x0 + dist * 0.5) / (dist * (0.8 + 0.3 * Math.random())));
+	if (n < 1) {
+		return;
+	}
+	for (var i = 0; i < n; i++) {
+		func.call(thisArg, x0 + ((2 * i + 1) / (n * 2)) * (x1 - x0));
+	}
+}
+
+function distribute(x0, y0, x1, y1, count, func, thisArg) {
+	if (count <= 1) {
+		if (count == 1) {
+			func.call(thisArg, 0.5 * (x0 + x1), 0.5 * (y0 + y1));
+		}
+		return;
+	}
+	for (var i = 0; i < count; i++) {
+		var x = x0 + (x1 - x0) * (i / (count - 1));
+		var y = y0 + (y1 - y0) * (i / (count - 1));
+		func.call(thisArg, x, y);
+	}
+}
+
 /*
  * Generate "open" level geometry: no obstacles
  */
-Segment.prototype.generateOpen = function() {
-	var x0 = this.x1, x1 = x0 + util.randInt(150, 225) * 2;
+Segment.prototype.generateOpen = function(game) {
+	var Types = ['Enemy.Glider', 'Enemy.Star', 'Enemy.Diamond'];
+	var x0 = this.x1, x1 = x0 + util.randInt(150, 225) * 2, x;
 	this.colors = Colors.Open;
 	this.extendBorders(x1);
+
+	// Generate monster groups
+	genPoints(x0, x1, 50, function(x) {
+		var t;
+		function spawn(x, y) { game.spawn(t, { position: [x, y] }); }
+		t = _.sample(Types);
+		distribute(
+			x - 8, util.randInt(-12, +12),
+			x + 8, util.randInt(-12, +12),
+			util.randInt(3, 8),
+			spawn, null);
+	});
 };
 
 /*
  * Generate "open" level geometry: no obstacles
  */
-Segment.prototype.generateMedium = function() {
+Segment.prototype.generateMedium = function(game) {
 	var x0 = this.x1, x1 = x0 + util.randInt(150, 225) * 2;
 	this.colors = Colors.Medium;
 	this.extendBorders(x1);
@@ -511,9 +549,8 @@ Segment.prototype.generateMedium = function() {
 /*
  * Generate "closed" level geometry: twisty passages.
  */
-Segment.prototype.generateClosed = function() {
-	var x0 = this.x1, x1 = x0 + util.randInt(100, 125) * 2;
-	var x;
+Segment.prototype.generateClosed = function(game) {
+	var x0 = this.x1, x1 = x0 + util.randInt(100, 125) * 2, x;
 	this.colors = Colors.Closed;
 	for (var j = 0; j < 100; j++) {
 		x = this.addVaryingBorders();
@@ -526,7 +563,7 @@ Segment.prototype.generateClosed = function() {
 /*
  * Create a random level segment.
  */
-function makeSegment(game, type) {
+function makeSegment(game) {
 	var bufW = param.Level.BufferWidth, x = -128;
 	var seg = new Segment(x);
 	var y0 = seg.floor.y, y1 = seg.ceiling.y;
@@ -535,11 +572,12 @@ function makeSegment(game, type) {
 	seg.addBorder(y0, x, false, true);
 	seg.addBorder(y1, x, true, true);
 
+	var type = 0;
 	switch (type) {
 	default:
-	case 0: seg.generateOpen(); break;
-	case 1: seg.generateMedium(); break;
-	case 2: seg.generateClosed(); break;
+	case 0: seg.generateOpen(game); break;
+	case 1: seg.generateMedium(game); break;
+	case 2: seg.generateClosed(game); break;
 	}
 
 	y0 = seg.floor.y;

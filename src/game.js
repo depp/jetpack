@@ -230,7 +230,7 @@ Game.prototype.nextSegment = function() {
 	var offset = vec2.create();
 	physics.resetWorld(this.world);
 	vec2.negate(offset, this.buffers[1]);
-	segment.makeSegment(this, util.randInt(0, 2));
+	segment.makeSegment(this);
 	vec2.add(offset, offset, this.buffers[0]);
 	for (i = 0; i < keep.length; i++) {
 		b = keep[i];
