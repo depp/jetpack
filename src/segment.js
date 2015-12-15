@@ -39,7 +39,7 @@ var Colors = {
 };
 
 /*
- * Border: either a floor or a ceiling.
+ * Block: either a floor or a ceiling.
  */
 function Border(x0, x1, y, isCeiling, isBuffer) {
 	this.x0 = x0;
@@ -49,6 +49,19 @@ function Border(x0, x1, y, isCeiling, isBuffer) {
 	this.y1 = y;
 	this.isCeiling = isCeiling;
 	this.isBuffer = !!isBuffer;
+}
+
+function emitBody(world, x0, x1, y0, y1) {
+	var shape = new p2.Box({
+		width: x1 - x0,
+		height: y1 - y0,
+	});
+	initShape(shape);
+	var body = new p2.Body({
+		position: [(x0 + x1) * 0.5, (y0 + y1) * 0.5],
+	});
+	body.addShape(shape);
+	world.addBody(body);
 }
 
 /*
@@ -65,26 +78,22 @@ Border.prototype.emitBody = function(world, yLimit) {
 		y0 = yLimit;
 		y1 = this.y;
 	}
-	if (y0 >= y1) {
+	if (y0 < y1) {
 		return;
 	}
-	var shape = new p2.Box({
-		width: x1 - x0,
-		height: y1 - y0,
-	});
-	initShape(shape);
-	var body = new p2.Body({
-		position: [(x0 + x1) * 0.5, (y0 + y1) * 0.5],
-	});
-	body.addShape(shape);
-	world.addBody(body);
+	emitBody(world, x0, x1, y0, y1);
 };
+
+function tweakColor(out, x) {
+	color.tintShade(
+		out, x,
+		Math.random() * 0.2, Math.random() * 0.2);
+}
 
 /*
  * Emit the border tile graphics.
  */
 Border.prototype.emitTiles = function(tiles, baseColor) {
-	var tileColor = vec4.create();
 	var remW = Math.floor((1 + this.x1 - this.x0) * 0.5);
 	var x = this.x0, y = this.y, dirY = this.isCeiling ? +1 : -1;
 	if (this.isBuffer) {
@@ -130,9 +139,8 @@ Border.prototype.emitTiles = function(tiles, baseColor) {
 		}
 		th = Math.max(th, 24);
 		remW -= tw;
-		color.tintShade(
-			tileColor, baseColor,
-			Math.random() * 0.2, Math.random() * 0.2);
+		var tileColor = vec4.create();
+		tweakColor(tileColor, baseColor);
 		newTiles.push({
 			x: x + tw,
 			y: y + th * dirY,
@@ -156,7 +164,12 @@ function Segment(x0) {
 	this.floor = { x: x0, y: y0, items: [] };
 	this.ceiling = { x: x0, y: y1, items: [] };
 	this.colors = null;
+	this.blocks = [];
 }
+
+Segment.prototype.addBlock = function(x0, x1, y0, y1) {
+	this.blocks.push({x0: x0, x1: x1, y0: y0, y1: y1});
+};
 
 /*
  * Add a border to the segment.
@@ -463,7 +476,11 @@ Segment.prototype.emit = function(game) {
 	initShape(shape);
 	body.addShape(shape);
 	world.addBody(body);
-	 _.forEach(this.ceiling.items, function(it) { it.emitBody(world, y); });
+	_.forEach(this.ceiling.items, function(it) { it.emitBody(world, y); });
+
+	_.forEach(this.blocks, function(it) {
+		emitBody(world, it.x0, it.x1, it.y0, it.y1);
+	});
 
 	var tiles = game.tiles;
 	tiles.clear();
@@ -472,6 +489,19 @@ Segment.prototype.emit = function(game) {
 	_.forEach(this.floor.items, function(it) { it.emitTiles(tiles, color); });
 	color = this.colors.Ceiling;
 	_.forEach(this.ceiling.items, function(it) { it.emitTiles(tiles, color); });
+	color = vec4.create();
+	vec4.lerp(color, this.colors.Floor, this.colors.Ceiling, 0.5);
+	tiles.add(_.map(this.blocks, function(it) {
+		var c = vec4.create();
+		tweakColor(c, color);
+		return {
+			x: (it.x0 + it.x1) * 0.5,
+			y: (it.y0 + it.y1) * 0.5,
+			w: it.x1 - it.x0,
+			h: it.y1 - it.y0,
+			color: c
+		};
+	}, this));
 
 	var x0 = this.x0, x1 = this.x1;
 	var arr0 = getHeightArray(this.floor.items, x0, x1);
@@ -544,6 +574,28 @@ Segment.prototype.generateMedium = function(game) {
 	var x0 = this.x1, x1 = x0 + util.randInt(150, 225) * 2;
 	this.colors = Colors.Medium;
 	this.extendBorders(x1);
+
+	// Generate obstacles and turrets
+	genPoints(x0, x1, 50, function(x) {
+		var w = util.randInt(4, 8), y0, y1, h;
+		var x0 = x - w, x1 = x + w;
+		switch (2 || util.randInt) {
+		default:
+		case 1:
+			// Empty
+			break;
+		case 2:
+			// Island
+			x0 -= w;
+			x1 += w;
+			h = util.randInt(4, 6);
+			y0 = (util.randInt(4, 12 - h) - 8) * 2;
+			y1 = y0 + h * 2;
+			this.addBlock(x0, x1, y0, y1);
+			console.log('BLOCK');
+			break;
+		}
+	}, this);
 };
 
 /*
@@ -572,7 +624,7 @@ function makeSegment(game) {
 	seg.addBorder(y0, x, false, true);
 	seg.addBorder(y1, x, true, true);
 
-	var type = 0;
+	var type = 1;
 	switch (type) {
 	default:
 	case 0: seg.generateOpen(game); break;
