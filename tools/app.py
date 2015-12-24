@@ -29,6 +29,8 @@ class App(object):
             deps=shaders)
 
         assets = {}
+        with open('assets/images/Font.json', 'r') as fp:
+            assets['Font'] = json.load(fp)
         self.build_images(assets, 'images')
         print(assets)
 
@@ -158,7 +160,7 @@ class App(object):
             scripts=scripts,
             css_data=self.index_css(),
             js_data=self.index_js(scripts),
-            app_name='Dash and the Jetpack Space Pirates',
+            app_name='Jetpack Every Day',
             version=ver,
         )
         return build.minify_html(self.config, data.encode('UTF-8'))

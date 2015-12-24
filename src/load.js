@@ -77,7 +77,7 @@ function loadAll(assetInfo, func) {
 /*
  * Loading screen.
  */
-function Load() {
+function LoadScreen() {
 	this._bg = filter.makeFilter({
 		shader: 'loading_bg',
 		uniforms: 'Scale Offset Color Wave InvRadius',
@@ -114,33 +114,31 @@ function Load() {
 }
 
 /*
- * Initialize the screen.
+ * Start the screen.
  */
-Load.prototype.init = function(r) {
+LoadScreen.prototype.start = function(r) {
 	loadAll(window.AssetInfo, function() {
-		state.set(new state.Game());
+		state.set('Menu', null);
 	});
 	this._bg.init(r);
 	this._startTime = r.time;
 };
 
 /*
- * Destroy the screen.
+ * Stop the screen.
  */
-Load.prototype.destroy = function(r) {
+LoadScreen.prototype.stop = function(r) {
 	this._bg.destroy(r);
 };
 
 /*
  * Render the loading screen.
  */
-Load.prototype.render = function(r) {
+LoadScreen.prototype.render = function(r) {
 	this._bg.render(r);
 };
 
-// We export through the state module.
-state.Load = Load;
-
 module.exports = {
+	LoadScreen: LoadScreen,
 	getImage: getImage,
 };

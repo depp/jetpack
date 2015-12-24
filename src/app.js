@@ -8,12 +8,15 @@
 // This is first, so we get console.log.
 require('./util');
 
-// Register states.
-require('./game');
-require('./load');
-
 var input = require('./input');
 var state = require('./state');
+
+state.register({
+	Game: function() { return new (require('./game')).GameScreen(); },
+	Load: function() { return new (require('./load')).LoadScreen(); },
+	Menu: function() { return new (require('./menu')).MenuScreen(); },
+});
+state.set('Load', null);
 
 // The canvas DOM element.
 var canvas = null;
@@ -45,7 +48,6 @@ function init(c, g) {
 	window.addEventListener('resize', resize, false);
 	input.init();
 	resize();
-	state.set(new state.Load());
 	start();
 }
 

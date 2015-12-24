@@ -88,9 +88,94 @@ function randomInBody(vec, body, scale) {
 	randomInCircle(vec, radius, body.position);
 }
 
+function WeightedRandom() {
+	this._weight = 0;
+	this._items = [];
+}
+
+WeightedRandom.prototype.add = function(weight, item) {
+	if (isNaN(weight)) {
+		throw new TypeError('Invalid weight');
+	}
+	if (weight <= 0) {
+		return;
+	}
+	this._weight += weight;
+	this._items.push({ item: item, weight: weight, mark: false });
+	return this;
+};
+
+WeightedRandom.prototype.choose = function() {
+	if (this._items.length <= 1) {
+		return this._items.length === 0 ? null : 0;
+	}
+	var r = Math.random() * this._weight;
+	for (var i = 0; i < this._items.length; i++) {
+		r -= this._items[i].weight;
+		if (r <= 0) {
+			return this._items[i].item;
+		}
+	}
+	return null;
+};
+
+WeightedRandom.prototype.sample = function(count) {
+	var items = this._items, result = [];
+	var i, j, r, w;
+	if (items.length === 0) {
+		return result;
+	}
+	if (count >= items.length) {
+		for (i = 0; i < items.length; i++) {
+			result.push(i);
+		}
+	} else {
+		w = this._weight;
+		for (j = 0; j < items.length; j++) {
+			items[j].mark = false;
+		}
+		for (i = 0; i < count; i++) {
+			r = Math.random() * w;
+			var it;
+			for (j = 0; j < items.length - 1; j++) {
+				it = items[j];
+				if (it.mark) {
+					continue;
+				}
+				r -= it.weight;
+				if (r <= 0) {
+					break;
+				}
+			}
+			it = items[j];
+			w -= it.weight;
+			it.mark = true;
+			result.push(j);
+		}
+	}
+	for (i = 1; i < result.length; i++) {
+		r = Math.floor(Math.random() * items.length);
+		if (r < i) {
+			var t = result[i];
+			result[i] = result[r];
+			result[r] = t;
+		}
+	}
+	for (i = 0; i < result.length; i++) {
+		result[i] = items[result[i]].item;
+	}
+	return result;
+};
+
+function numberWithCommas(x) {
+	return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
 module.exports = {
 	genIndexArray: genIndexArray,
 	randInt: randInt,
 	randomInCircle: randomInCircle,
 	randomInBody: randomInBody,
+	WeightedRandom: WeightedRandom,
+	numberWithCommas: numberWithCommas,
 };

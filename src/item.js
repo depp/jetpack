@@ -11,18 +11,22 @@ var vec4 = glm.vec4;
 
 var color = require('./color');
 var entity = require('./entity');
+var param = require('./param');
 var physics = require('./physics');
+var sprites = require('./sprites');
+var text = require('./text');
 var weapon = require('./weapon');
+var util = require('./util');
 
 var ItemSize = 3;
 var BobPeriod = 2;
 var BobDistance = 1;
 
 var bob = vec2.create();
-function getBobPos(obj, game) {
+function getBobPos(obj, curTime) {
 	vec2.copy(bob, obj.body.interpolatedPosition);
 	bob[1] += (0.5 * BobDistance) *
-		Math.sin(game.time.elapsed * (2 * Math.PI / BobPeriod) + obj.bobShift);
+		Math.sin(curTime * (2 * Math.PI / BobPeriod) + obj.bobShift);
 	return bob;
 }
 
@@ -48,9 +52,9 @@ function Corpse(game, args) {
 		.start();
 }
 Corpse.prototype = {
-	emit: function(game) {
-		game.sprites.add({
-			position: getBobPos(this, game),
+	emit: function(curTime) {
+		sprites.world.add({
+			position: getBobPos(this, curTime),
 			radius: this.radius,
 			color: this.color,
 			sprite: this.sprite,
@@ -66,13 +70,13 @@ Corpse.prototype = {
  */
 
 function Weapon(game) {
-	var tier = 1; //Math.random() < 0.3 ? 2 : 1;
+	var tier = Math.random() < 0.3 ? 2 : 1;
 	this.weapon = weapon.getWeapon(tier);
 	this.sprite = this.weapon.sprite;
+	this.name = this.weapon.name;
 }
-
 Weapon.prototype = {
-	color: color.White,
+	color: color.Weapon,
 	pickup: function(game, e) {
 		if (!e || !e.onGiveWeapon) {
 			return false;
@@ -82,8 +86,100 @@ Weapon.prototype = {
 	},
 };
 
+function Shield(game) {
+	this.level = Math.random() < 0.25 ? 2 : 1;
+	this.sprite = 'IShield' + this.level;
+	this.name = this.level == 2 ? 'Super Shield' : 'Shield Recharge';
+}
+Shield.prototype = {
+	color: color.Shield,
+	pickup: function(game, e) {
+		if (!e || !e.onGiveHealth) {
+			return false;
+		}
+		e.onGiveHealth(game, this.level);
+		return true;
+	},
+};
+
+var BonusInfo = [{
+	sprite: 'BHalf',
+	weight: 1,
+	value: 0.5,
+	name: 'x1/2 Bonus',
+	color: color.BonusHalf,
+}, {
+	sprite: 'BTwo',
+	weight: 4,
+	value: 2,
+	name: 'x2 Bonus',
+	color: color.BonusTwo,
+}, {
+	sprite: 'BThree',
+	weight: 3,
+	value: 3,
+	name: 'x3 Bonus',
+	color: color.BonusThree,
+}, {
+	sprite: 'BFour',
+	weight: 2,
+	value: 4,
+	name: 'x4 Bonus',
+	color: color.BonusFour,
+}];
+var BonusWeights = new util.WeightedRandom();
+_.forEach(BonusInfo, function(b) { BonusWeights.add(b.weight, b); });
+
+function Bonus(game) {
+	this.bonus = BonusWeights.choose();
+	this.sprite = this.bonus.sprite;
+	this.color = this.bonus.color;
+	this.name = this.bonus.name;
+}
+Bonus.prototype = {
+	pickup: function(game, e) {
+		if (!e || !e.onGiveBonus) {
+			return false;
+		}
+		e.onGiveBonus(game, this.bonus);
+		return true;
+	},
+};
+
+function Death(game) {}
+Death.prototype = {
+	color: color.White,
+	sprite: 'IDeath',
+	name: '+10,000 Points',
+	pickup: function(game, e) {
+		if (!e || !e.onGiveHealth) {
+			return false;
+		}
+		e.onGiveHealth(game, 0);
+		return true;
+	},
+};
+
+function Boost(game) {}
+Boost.prototype = {
+	color: color.Boost,
+	sprite: 'ISpeed',
+	name: 'Speed Boost',
+	pickup: function(game, e) {
+		if (!e || !e.onGiveBoost) {
+			return false;
+		}
+		e.onGiveBoost(game);
+		return true;
+	},
+};
+
 var Items = {
 	Weapon: Weapon,
+	Shield: Shield,
+	Bonus: Bonus,
+	Death: Death,
+	Boost: Boost,
 };
 
 /**********************************************************************/
@@ -110,9 +206,9 @@ function Item(game, args, type) {
 	this.type = type;
 }
 Item.prototype = {
-	emit: function(game) {
-		game.sprites.add({
-			position: getBobPos(this, game),
+	emit: function(curTime) {
+		sprites.world.add({
+			position: getBobPos(this, curTime),
 			radius: ItemSize,
 			color: this.type.color,
 			sprite: this.type.sprite,
@@ -122,6 +218,14 @@ Item.prototype = {
 		if (!this.type.pickup(game, body.entity)) {
 			return;
 		}
+		game.message(
+			new text.Layout({
+				position: [param.Width / 2, 32],
+				color: this.type.color,
+			}).addLine({
+				text: this.type.name,
+				scale: 3,
+			}));
 		game.spawnObj(new Corpse(game, { base: this }));
 	},
 };

@@ -41,6 +41,11 @@ function Time(target) {
 	this.frame = 0;
 	// The total elapsed time
 	this.elapsed = 0;
+
+	// Scaling factor for time (larger is slower)
+	this.scale = 1;
+
+	this.realTime = 0;
 }
 
 /*
@@ -49,6 +54,7 @@ function Time(target) {
  * time: Timestamp in ms
  */
 Time.prototype.update = function(curTime) {
+	this.realTime = curTime;
 	var lastTime = this._lastTime;
 	this._lastTime = curTime;
 	if (this._step1 < 0) {
@@ -88,7 +94,7 @@ Time.prototype._step = function(stepTime) {
 	this.elapsed = this.frame * this._dt;
 	this._target.step(this._dt);
 	this._step0 = stepTime;
-	this._step1 = stepTime + this._dt * 1e3;
+	this._step1 = stepTime + this._dt * 1e3 * this.scale;
 };
 
 module.exports = {

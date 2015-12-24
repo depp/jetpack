@@ -204,10 +204,13 @@ function Camera(arg) {
 	this._translate = glm.vec3.create();
 	this._proj = mat4.create();
 	this._mvp = mat4.create();
+	this._uimvp = mat4.create();
 
 	// Public results
 	this.MVP = null;
 	this.pos = vec2.create();
+	this.uiMVP = null;
+	this.zoom = 1;
 
 	if (arg) {
 		this.set(arg);
@@ -265,13 +268,30 @@ Camera.prototype.setTrackY = function(x0, y) {
  * Get the model view projection matrix.
  */
 Camera.prototype.update = function(r, frac) {
+	var fovX, fovY;
+
+	// Calculate world view
 	vec2.lerp(this.pos, this._pos0, this._pos1, frac);
-	vec2.negate(this._translate, this.pos);
-	var fovY = param.FovY, fovX = r.aspect * fovY;
-	this._proj[0] = 2/fovX;
-	this._proj[5] = 2/fovY;
+	this._translate[0] = -this.pos[0];
+	this._translate[1] = -this.pos[1];
+	fovY = param.FovY;
+	fovX = r.aspect * fovY;
+	mat4.identity(this._proj);
+	this._proj[0] = this.zoom * 2/fovX;
+	this._proj[5] = this.zoom * 2/fovY;
 	mat4.translate(this._mvp, this._proj, this._translate);
 	this.MVP = this._mvp;
+
+	// Calculate UI view
+	this._translate[0] = -800 / 2;
+	this._translate[1] = -450 / 2;
+	fovY = 450;
+	fovX = r.aspect * fovY;
+	mat4.identity(this._proj);
+	this._proj[0] = 2 / fovX;
+	this._proj[5] = 2 / fovY;
+	mat4.translate(this._uimvp, this._proj, this._translate);
+	this.uiMVP = this._uimvp;
 };
 
 /*

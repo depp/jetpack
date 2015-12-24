@@ -12,13 +12,10 @@
     </div>
     <div id="instructions">
       <h1>${app_name|h}</h1>
-      <p>
-	Fight your way out of the space pirate lair!
-      </p>
       <h3>Controls</h3>
       <ul class="controls">
-	<li><span>Mouse:</span> aim and fire</li>
-	<li><span>Space:</span> jetpack</li>
+	<li><span>Space Q A Z:</span> jetpack</li>
+	<li><span>W S X:</span> fire</li>
       </ul>
     </div>
     <script type="text/javascript">${js_data}</script>

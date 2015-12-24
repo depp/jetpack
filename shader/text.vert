@@ -6,11 +6,10 @@ varying vec2 vTexCoord;
 varying vec4 vColor;
 
 uniform mat4 MVP;
+uniform vec2 TexScale;
 uniform vec2 Offset;
 uniform vec4 BlendColor;
 uniform float BlendAmount;
-
-const vec2 TexScale = vec2(0.125, 0.25);
 
 void main() {
     vTexCoord = TexCoord * TexScale;

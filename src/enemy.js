@@ -13,6 +13,7 @@ var color = require('./color');
 var entity = require('./entity');
 var param = require('./param');
 var physics = require('./physics');
+var sprites = require('./sprites');
 var util = require('./physics');
 
 var StunTime = 0.3;
@@ -49,9 +50,9 @@ function randomDirection() {
 	return shotDir;
 }
 
-function emitEnemy(obj, game) {
+function emitEnemy(obj) {
 	var type = obj.type;
-	game.sprites.add({
+	sprites.world.add({
 		position: obj.body.interpolatedPosition,
 		radius: 1.5,
 		color: obj.color,
@@ -64,21 +65,19 @@ function emitEnemy(obj, game) {
  * Class for enemy corpses.
  */
 function Corpse(game, body, type) {
-	body.gravityScale = 1;
-	body.mass *= 0.5;
-	body.updateMassProperties();
-	_.forEach(body.shapes, function(s) {
-		s.material = physics.Material.Bouncy;
-	});
+	physics.corpsify(body);
 	this.body = body;
 	this.type = type;
 	this.color = vec4.clone(color.White);
+	game.tween(this)
+		.to({ color: color.Transparent }, 2)
+		.start();
 }
 Corpse.prototype = {
-	emit: function(game) {
-		emitEnemy(this, game);
+	emit: function(curTime) {
+		emitEnemy(this);
 	},
-	lifespan: 3,
+	lifespan: 2,
 };
 
 /*
@@ -91,11 +90,16 @@ function Enemy(game, args, type) {
 	var position = args.position;
 	var body = new p2.Body({
 		position: args.position,
-		angle: Math.PI * 0.5,
+		angle: Math.PI * 0.5 + (args.angle || 0),
 		mass: type.mass,
 		gravityScale: 0,
 	});
-	var shape = new p2.Circle({ radius: 1 });
+	var shape;
+	if (type.isBox) {
+		shape = new p2.Box({ width: 1, height: 1 });
+	} else {
+		shape = new p2.Circle({ radius: 1 });
+	}
 	shape.collisionGroup = physics.Mask.Enemy;
 	shape.collisionMask = physics.Mask.World | physics.Mask.Player;
 	body.addShape(shape);
@@ -110,8 +114,8 @@ Enemy.prototype = {
 	step: function(game) {
 		this.type.step(game, this);
 	},
-	emit: function(game) {
-		emitEnemy(this, game);
+	emit: function(curTime) {
+		emitEnemy(this);
 	},
 	onDamage: function(game, amt) {
 		if (this.health <= 0) {
@@ -129,6 +133,7 @@ Enemy.prototype = {
 		}
 	},
 	die: function(game) {
+		game.award(this.type.points);
 		game.spawnObj(new Corpse(game, this.body, this.type));
 	},
 	team: 'enemy',
@@ -214,6 +219,7 @@ Glider.prototype = {
 	mass: 2,
 	health: 2,
 	drive: drive(0.7),
+	points: 500,
 
 	slope: 3,
 	speed: 15,
@@ -271,6 +277,7 @@ Diamond.prototype = {
 	sprite: 'EDiamond',
 	mass: 5,
 	health: 2,
+	points: 125,
 
 	step: function(game, ent) {
 		if (this.mover.step(ent.body)) {
@@ -306,6 +313,7 @@ Star.prototype = {
 	sprite: 'EStar',
 	mass: 5,
 	health: 2,
+	points: 175,
 
 	step: function(game, ent) {
 		if (this.mover.step(ent.body)) {
@@ -330,7 +338,9 @@ Silo.prototype = {
 	color: color.hex(0xA7A4B3),
 	sprite: 'ESilo',
 	mass: 100,
-	health: 5,
+	health: 2,
+	isBox: true,
+	points: 250,
 
 	step: function(game, ent) {
 		if (this.pfire.step()) {
@@ -350,7 +360,9 @@ Turret.prototype = {
 	color: color.hex(0xAB8249),
 	sprite: 'ETurret',
 	mass: 100,
-	health: 5,
+	health: 1,
+	isBox: true,
+	points: 100,
 
 	step: function(game, ent) {
 		if (this.pfire.step()) {

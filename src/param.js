@@ -42,6 +42,12 @@ module.exports = {
 		Friction: 0.5,
 		// Maximum angle, in degrees, which is considered "ground"
 		GroundAngle: 30,
+		// Length of time an item lasts
+		ItemTime: 12,
+		// Length of time we show hurt animation
+		HurtTime: 0.2,
+		// Maximum / starting health
+		MaxHealth: 8,
 	},
 
 	// Level generation
@@ -57,4 +63,10 @@ module.exports = {
 
 	// Maximum distance to scan for objects.
 	ScanDistance: 50,
+
+	// Screen width
+	Width: 800,
+	// Screen height
+	Height: 450,
+
 };

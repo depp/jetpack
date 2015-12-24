@@ -319,6 +319,15 @@ Tween.prototype.to = function(props, duration, ease) {
 	return this;
 };
 
+/*
+ * Execute a callback at this point in the tween.
+ */
+Tween.prototype.callback = function(func) {
+	var t = this._totalTime;
+	this._segs.push({ t0: t, t1: t, callback: func });
+	return this;
+};
+
 module.exports = {
 	TweenManager: TweenManager,
 };

@@ -11,6 +11,7 @@ var vec4 = glm.vec4;
 var color = require('./color');
 var param = require('./param');
 var physics = require('./physics');
+var tiles = require('./tiles');
 var util = require('./util');
 
 function initShape(s) {
@@ -93,7 +94,7 @@ function tweakColor(out, x) {
 /*
  * Emit the border tile graphics.
  */
-Border.prototype.emitTiles = function(tiles, baseColor) {
+Border.prototype.emitTiles = function(baseColor) {
 	var remW = Math.floor((1 + this.x1 - this.x0) * 0.5);
 	var x = this.x0, y = this.y, dirY = this.isCeiling ? +1 : -1;
 	if (this.isBuffer) {
@@ -478,17 +479,28 @@ Segment.prototype.emit = function(game) {
 	world.addBody(body);
 	_.forEach(this.ceiling.items, function(it) { it.emitBody(world, y); });
 
+	body = new p2.Body({ position: [this.x1, 0], angle: Math.PI * 0.5 });
+	shape = new p2.Plane();
+	initShape(shape);
+	body.addShape(shape);
+	world.addBody(body);
+
+	body = new p2.Body({ position: [this.x0, 0], angle: Math.PI * 1.5 });
+	shape = new p2.Plane();
+	initShape(shape);
+	body.addShape(shape);
+	world.addBody(body);
+
 	_.forEach(this.blocks, function(it) {
 		emitBody(world, it.x0, it.x1, it.y0, it.y1);
 	});
 
-	var tiles = game.tiles;
 	tiles.clear();
 	var color;
 	color = this.colors.Floor;
-	_.forEach(this.floor.items, function(it) { it.emitTiles(tiles, color); });
+	_.forEach(this.floor.items, function(it) { it.emitTiles(color); });
 	color = this.colors.Ceiling;
-	_.forEach(this.ceiling.items, function(it) { it.emitTiles(tiles, color); });
+	_.forEach(this.ceiling.items, function(it) { it.emitTiles(color); });
 	color = vec4.create();
 	vec4.lerp(color, this.colors.Floor, this.colors.Ceiling, 0.5);
 	tiles.add(_.map(this.blocks, function(it) {
@@ -545,6 +557,23 @@ function distribute(x0, y0, x1, y1, count, func, thisArg) {
 	}
 }
 
+var ItemWeights = new util.WeightedRandom()
+		.add(1, 'Death')
+		.add(1, 'Boost')
+		.add(4, 'Weapon')
+		.add(2, 'Weapon')
+		.add(4, 'Shield')
+		.add(6, 'Bonus');
+
+function spawnItems(game, locs) {
+	var itLocs = _.sample(locs, 2);
+	var itTypes = ItemWeights.sample(itLocs.length);
+	var n = Math.min(itLocs.length, itTypes.length);
+	for (var i = 0; i < n; i++) {
+		game.spawn('Item.' + itTypes[i], { position: itLocs[i] });
+	}
+}
+
 /*
  * Generate "open" level geometry: no obstacles
  */
@@ -555,6 +584,7 @@ Segment.prototype.generateOpen = function(game) {
 	this.extendBorders(x1);
 
 	// Generate monster groups
+	var itemLocs = [];
 	genPoints(x0, x1, 50, function(x) {
 		var t;
 		function spawn(x, y) { game.spawn(t, { position: [x, y] }); }
@@ -564,25 +594,48 @@ Segment.prototype.generateOpen = function(game) {
 			x + 8, util.randInt(-12, +12),
 			util.randInt(3, 8),
 			spawn, null);
+		itemLocs.push([x, util.randInt(-12, +12)]);
 	});
+	spawnItems(game, itemLocs);
 };
 
 /*
  * Generate "open" level geometry: no obstacles
  */
 Segment.prototype.generateMedium = function(game) {
+	var Types = ['Enemy.Star', 'Enemy.Diamond'];
+
 	var x0 = this.x1, x1 = x0 + util.randInt(150, 225) * 2;
 	this.colors = Colors.Medium;
 	this.extendBorders(x1);
 
 	// Generate obstacles and turrets
+	var doNotPlace = true;
+	var itemLocs = [];
 	genPoints(x0, x1, 50, function(x) {
 		var w = util.randInt(4, 8), y0, y1, h;
 		var x0 = x - w, x1 = x + w;
-		switch (2 || util.randInt) {
+		var bi = util.randInt(1, 5);
+		var surf = null, type;
+
+		switch (bi) {
 		default:
 		case 1:
 			// Empty
+			y0 = -16;
+			y1 = +16;
+			x0 -= w * 2;
+			x1 += w * 2;
+			type = _.sample(Types);
+			distribute(
+				x0, 0,
+				x1, 0,
+				util.randInt(3, 5),
+				function(x, y) { game.spawn(type, { position: [x, y] }); });
+			itemLocs.push([
+				util.randInt(x0, x1),
+				Math.random() < 0.5 ? -12 : +12,
+			]);
 			break;
 		case 2:
 			// Island
@@ -592,10 +645,59 @@ Segment.prototype.generateMedium = function(game) {
 			y0 = (util.randInt(4, 12 - h) - 8) * 2;
 			y1 = y0 + h * 2;
 			this.addBlock(x0, x1, y0, y1);
-			console.log('BLOCK');
+			itemLocs.push([
+				util.randInt(x0, x1),
+				Math.random() < 0.5 ? -12 : +12,
+			]);
+			break;
+		case 3:
+			y0 = util.randInt(0, 3) * 2;
+			y1 = 16;
+			this.addBlock(x0, x1, -16, y0);
+			surf = y1;
+			break;
+		case 4:
+			y0 = -16;
+			y1 = util.randInt(-3, 0) * 2;
+			this.addBlock(x0, x1, y1, 16);
+			surf = y0;
+			break;
+		case 5:
+			y0 = util.randInt(-6, -4) * 2;
+			y1 = util.randInt(3, 6) * 2;
+			this.addBlock(x0, x1, -16, y0);
+			this.addBlock(x0, x1, y1, 16);
+			surf = Math.random() < 0.5 ? y0 : y1;
 			break;
 		}
+
+		if (surf !== null && !doNotPlace) {
+			doNotPlace = true;
+			type = Math.random() < 0.3 ? 'Enemy.Silo' : 'Enemy.Turret';
+			var angle;
+			if (surf == y0) {
+				angle = 0;
+				surf += 1;
+			} else {
+				angle = -Math.PI;
+				surf -= 1;
+			}
+			distribute(
+				x0 + 2, surf,
+				x1 - 2, surf,
+				Math.ceil((x1 - x0) / 6),
+				function(x, y) {
+					game.spawn(type, {
+						position: [x, y],
+						angle: angle,
+					});
+				});
+		} else {
+			doNotPlace = false;
+		}
 	}, this);
+
+	spawnItems(game, itemLocs);
 };
 
 /*
@@ -624,7 +726,7 @@ function makeSegment(game) {
 	seg.addBorder(y0, x, false, true);
 	seg.addBorder(y1, x, true, true);
 
-	var type = 1;
+	var type = util.randInt(0, 1);
 	switch (type) {
 	default:
 	case 0: seg.generateOpen(game); break;

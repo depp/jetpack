@@ -13,9 +13,8 @@ var util = require('./util');
 // Attribute offsets
 var APos = 0;       // float x 2
 var ATexCoord = 8;  // int16 x 2
-var AColor1 = 12;   // u8 x 4
-var AColor2 = 16;   // u8 x 4
-var ATotal = 20;
+var AColor = 12;    // u8 x 4
+var ATotal = 16;
 
 // Map from sprites to locations
 var SpriteNames = {
@@ -60,13 +59,43 @@ var SpriteNames = {
 	Reticle:  15,
 };
 
+var Loaded = false;
+var Program = null;
+var SpriteSheet = null;
+
+function init(r) {
+	if (Loaded) {
+		return;
+	}
+	Loaded = true;
+	var gl = r.gl;
+
+	Program = shader.loadProgram(r.gl, {
+		vert: 'sprite.vert',
+		frag: 'sprite.frag',
+		attributes: 'Pos TexCoord Color',
+		uniforms: 'MVP Offset BlendColor BlendAmount SpriteSheet',
+	});
+
+	var img = load.getImage('Sprites');
+	if (img) {
+		SpriteSheet = gl.createTexture();
+		gl.bindTexture(gl.TEXTURE_2D, SpriteSheet);
+		gl.texImage2D(
+			gl.TEXTURE_2D, 0, gl.LUMINANCE, gl.LUMINANCE, gl.UNSIGNED_BYTE, img);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+		gl.texParameteri(
+      gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+		gl.generateMipmap(gl.TEXTURE_2D);
+		gl.bindTexture(gl.TEXTURE_2D, null);
+	}
+}
+
 /*
  * Sprite layer.
  */
-function Sprites() {
-	this.program = null;
-
-	this.tex = null;          // sprite texture
+function Sprites(isUI) {
+	this.isUI = isUI;
 	this.count = 0;           // number of sprites
 	this.capacity = 0;        // maximum number of sprites in array
 	this.vdata = null;        // vertex data (ArrayBuffer)
@@ -81,58 +110,13 @@ function Sprites() {
 }
 
 /*
- * Initialize the sprite layer.
- */
-Sprites.prototype.init = function(r) {
-	if (this.program) {
-		return;
-	}
-	var gl = r.gl;
-
-	this.program = shader.loadProgram(r.gl, {
-		vert: 'sprite.vert',
-		frag: 'sprite.frag',
-		attributes: 'Pos TexCoord Color1 Color2',
-		uniforms: 'MVP SpriteSheet',
-	});
-
-	var img = load.getImage('Sprites');
-	if (img) {
-		this.tex = gl.createTexture();
-		gl.bindTexture(gl.TEXTURE_2D, this.tex);
-		gl.texImage2D(
-			gl.TEXTURE_2D, 0, gl.LUMINANCE, gl.LUMINANCE, gl.UNSIGNED_BYTE, img);
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-		gl.texParameteri(
-      gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
-		gl.generateMipmap(gl.TEXTURE_2D);
-		gl.bindTexture(gl.TEXTURE_2D, null);
-	}
-};
-
-/*
- * Destroy the sprite layer.
- */
-Sprites.prototype.destroy = function(r) {
-	if (this.program) {
-		this.program.destroy(r);
-	}
-	if (this.vbuffer) {
-		r.gl.deleteBuffer(this.vbuffer);
-	}
-	if (this.ibuffer) {
-		r.gl.deleteBuffer(this.ibuffer);
-	}
-};
-
-/*
  * Draw the sprite layer to the screen.
  */
 Sprites.prototype.render = function(r, camera) {
-	var gl = r.gl;
+	var gl = r.gl, p = Program;
 	var i;
 
-	if (!this.program || !this.count) {
+	if (!Program || !SpriteSheet || !this.count) {
 		return;
 	}
 
@@ -164,29 +148,35 @@ Sprites.prototype.render = function(r, camera) {
 
 	gl.enable(gl.BLEND);
 	gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-	gl.useProgram(this.program.program);
-	gl.uniformMatrix4fv(this.program.MVP, false, camera.MVP);
-	gl.uniform1i(this.program.SpriteSheet, 0);
+	gl.useProgram(p.program);
 	gl.bindBuffer(gl.ARRAY_BUFFER, this.vbuffer);
 	gl.enableVertexAttribArray(0);
 	gl.vertexAttribPointer(0, 2, gl.FLOAT, false, ATotal, APos);
 	gl.enableVertexAttribArray(1);
 	gl.vertexAttribPointer(1, 2, gl.SHORT, false, ATotal, ATexCoord);
 	gl.enableVertexAttribArray(2);
-	gl.vertexAttribPointer(2, 4, gl.UNSIGNED_BYTE, true, ATotal, AColor1);
-	gl.enableVertexAttribArray(3);
-	gl.vertexAttribPointer(3, 4, gl.UNSIGNED_BYTE, true, ATotal, AColor2);
+	gl.vertexAttribPointer(2, 4, gl.UNSIGNED_BYTE, true, ATotal, AColor);
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.ibuffer);
 	gl.activeTexture(gl.TEXTURE0);
-	gl.bindTexture(gl.TEXTURE_2D, this.tex);
+	gl.bindTexture(gl.TEXTURE_2D, SpriteSheet);
 
-	gl.drawElements(gl.TRIANGLES, this.count * 6, gl.UNSIGNED_SHORT, 0);
+	gl.uniform1i(p.SpriteSheet, 0);
+	if (this.isUI) {
+		gl.uniformMatrix4fv(p.MVP, false, camera.uiMVP);
+		color.dropShadow(gl, p, function() {
+			gl.drawElements(gl.TRIANGLES, this.count * 6, gl.UNSIGNED_SHORT, 0);
+		}, this);
+	} else {
+		gl.uniformMatrix4fv(p.MVP, false, camera.MVP);
+		gl.uniform1f(p.BlendAmount, 0);
+		gl.uniform2f(p.Offset, 0, 0);
+		gl.drawElements(gl.TRIANGLES, this.count * 6, gl.UNSIGNED_SHORT, 0);
+	}
 
 	gl.bindTexture(gl.TEXTURE_2D, null);
 	gl.disableVertexAttribArray(0);
 	gl.disableVertexAttribArray(1);
 	gl.disableVertexAttribArray(2);
-	gl.disableVertexAttribArray(3);
 	gl.bindBuffer(gl.ARRAY_BUFFER, null);
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 	gl.useProgram(null);
@@ -231,7 +221,7 @@ Sprites.prototype.add = function() {
 	}
 
 	for (i = 0; i < arguments.length; i++) {
-		var j = 20 * (count + i), k = 40 * (count + i);
+		var j = 16 * (count + i), k = 32 * (count + i);
 		var arg = arguments[i];
 		var pos = arg.position, r = arg.radius;
 		if (!pos || typeof r !== 'number') {
@@ -244,7 +234,7 @@ Sprites.prototype.add = function() {
 			vc = Math.cos(angle) * r;
 			vs = Math.sin(angle) * r;
 		}
-		var color1 = color.toU32(arg.color), color2 = 0xffffffff;
+		var color1 = color.toU32(arg.color);
 		var sprite = SpriteNames[arg.sprite];
 		if (typeof sprite == 'undefined') {
 			console.warn('Unknown sprite: ' + arg.sprite);
@@ -257,28 +247,24 @@ Sprites.prototype.add = function() {
 		i16[k+ 4] = tx;
 		i16[k+ 5] = ty + 1;
 		u32[j+ 3] = color1;
-		u32[j+ 4] = color2;
 
-		f32[j+ 5] = x + vc + vs;
-		f32[j+ 6] = y - vc + vs;
-		i16[k+14] = tx + 1;
-		i16[k+15] = ty + 1;
-		u32[j+ 8] = color1;
-		u32[j+ 9] = color2;
+		f32[j+ 4] = x + vc + vs;
+		f32[j+ 5] = y - vc + vs;
+		i16[k+12] = tx + 1;
+		i16[k+13] = ty + 1;
+		u32[j+ 7] = color1;
 
-		f32[j+10] = x - vc - vs;
-		f32[j+11] = y + vc - vs;
-		i16[k+24] = tx;
-		i16[k+25] = ty;
-		u32[j+13] = color1;
-		u32[j+14] = color2;
+		f32[j+ 8] = x - vc - vs;
+		f32[j+ 9] = y + vc - vs;
+		i16[k+20] = tx;
+		i16[k+21] = ty;
+		u32[j+11] = color1;
 
-		f32[j+15] = x + vc - vs;
-		f32[j+16] = y + vc + vs;
-		i16[k+34] = tx + 1;
-		i16[k+35] = ty;
-		u32[j+18] = color1;
-		u32[j+19] = color2;
+		f32[j+12] = x + vc - vs;
+		f32[j+13] = y + vc + vs;
+		i16[k+28] = tx + 1;
+		i16[k+29] = ty;
+		u32[j+15] = color1;
 	}
 
 	this.count = newCount;
@@ -294,5 +280,7 @@ Sprites.prototype.clear = function() {
 };
 
 module.exports = {
-	Sprites: Sprites,
+	init: init,
+	world: new Sprites(false),
+	ui: new Sprites(true),
 };

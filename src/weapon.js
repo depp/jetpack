@@ -100,11 +100,20 @@ ActionAuto.prototype.step = function(game, ctl) {
 function Weapon(game, player) {
 	this.player = player;
 	this.source = this.player.body;
+	this.empty = false;
+	this.ammo = this.maxAmmo || null;
 }
 
 Weapon.prototype.step = function(game) {
 	if (this.action.step(game, control.game.fire)) {
 		this.fire(game);
+		if (this.ammo !== null) {
+			this.ammo--;
+			game.hud.weapon.set(this.ammo);
+			if (this.ammo <= 0) {
+				this.empty = true;
+			}
+		}
 	}
 };
 
@@ -155,6 +164,7 @@ createType({
 	name: 'Triple Machine Gun',
 	tier: 1,
 	sprite: 'WTriple',
+	maxAmmo: 200,
 	init: function(game, player) {
 		this.action = new ActionAuto(8);
 	},
@@ -175,6 +185,7 @@ createType({
 	name: 'Rocket Launcher',
 	tier: 1,
 	sprite: 'WRocket',
+	maxAmmo: 100,
 	init: function(game, player) {
 		this.action = new ActionAuto(5);
 	},
@@ -190,6 +201,7 @@ createType({
 	name: 'Homing Missiles',
 	tier: 1,
 	sprite: 'WHoming',
+	maxAmmo: 50,
 	init: function(game, player) {
 		this.action = new ActionAuto(3);
 	},
@@ -202,10 +214,10 @@ createType({
 });
 
 createType({
-	debug: true,
 	name: 'Itano Battery',
 	tier: 2,
 	sprite: 'WItano',
+	maxAmmo: 250,
 	init: function(game, player) {
 		this.action = new ActionAuto(15);
 		this.angle = Math.random() * 2 * Math.PI;

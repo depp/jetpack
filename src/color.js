@@ -6,6 +6,7 @@
 'use strict';
 
 var glm = require('gl-matrix');
+var vec2 = glm.vec4;
 var vec4 = glm.vec4;
 
 /*
@@ -99,6 +100,21 @@ function tintShade(out, color, tint, shade) {
 	out[3] = a;
 }
 
+var DropShadow = [0.4, 0.5, 0.6, 0.7];
+function dropShadow(gl, p, func, thisArg) {
+	var n = DropShadow.length;
+	for (var i = 0; i < DropShadow.length; i++) {
+		var a = DropShadow[i], d = DropShadow.length - i;
+		gl.uniform4f(p.BlendColor, 0, 0, 0, a);
+		gl.uniform1f(p.BlendAmount, 1);
+		gl.uniform2f(p.Offset, d, -d);
+		func.call(thisArg);
+	}
+	gl.uniform1f(p.BlendAmount, 0);
+	gl.uniform2f(p.Offset, 0, 0);
+	func.call(thisArg);
+}
+
 module.exports = {
 	rgb: rgb,
 	rgba: rgba,
@@ -107,9 +123,18 @@ module.exports = {
 	tint: tint,
 	shade: shade,
 	tintShade: tintShade,
+	dropShadow: dropShadow,
 
 	White: rgb(1, 1, 1),
 	Gray: rgb(0.5, 0.5, 0.5),
 	Black: rgb(0, 0, 0),
 	Transparent: rgba(0, 0, 0, 0),
+
+	BonusHalf: hex(0xFF3838),
+	BonusTwo: hex(0xFF3838),
+	BonusThree: hex(0xB19AF5),
+	BonusFour: hex(0x3BD61C),
+	Weapon: hex(0xFFB845),
+	Shield: hex(0x70DBFF),
+	Boost: hex(0xB262FC),
 };

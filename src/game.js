@@ -19,34 +19,55 @@ var camera = require('./camera');
 var color = require('./color');
 var control = require('./control');
 var entity = require('./entity');
+var hud = require('./hud');
 var lights = require('./lights');
 var param = require('./param');
 var physics = require('./physics');
+var poly = require('./poly');
 var segment = require('./segment');
 var sprites = require('./sprites');
 var state = require('./state');
+var text = require('./text');
 var tiles = require('./tiles');
 var time = require('./time');
 var tween = require('./tween');
-var util = require('./util');
 
 /*
  * Main game screen.
  */
-function Game() {
+function GameScreen() {
+	this.levelIndex = 0;
+	this.time = null;
+	this._tweens = null;
+	this.hud = null;
+	this.buffers = null;
+	this.world = new p2.World();
+	this.world.on("beginContact", this._beginContact.bind(this));
+	this.teams = {player: [], enemy: []};
+	this.camera = null;
+}
+
+/*
+ * Start the screen.
+ */
+GameScreen.prototype.start = function(r) {
 	var g = param.Game;
 
-	// Timing manager
-	this.time = new time.Time(this);
-	this._tweens = new tween.TweenManager();
+	this.levelIndex = 0;
 
-	// Graphics layers
-	this.background = new background.Background();
-	this.background.setGrid();
-	this.tiles = new tiles.Tiles();
-	this.sprites = new sprites.Sprites();
-	this.lights = new lights.Lights();
-	this.lights.addGlobal([{
+	// Initialize graphics layers and controls
+	text.init(r);
+	background.init(r);
+	tiles.init(r);
+	sprites.init(r);
+	poly.init(r);
+	control.game.enable();
+	text.clear();
+
+	// Set base graphics
+	poly.ui.clear();
+	lights.clear();
+	lights.addGlobal([{
 		color: color.rgb(1.0, 0.9, 0.2),
 		intensity: 0.6,
 		direction: [1, 5, 5],
@@ -60,57 +81,57 @@ function Game() {
 		direction: [7, -4, +8],
 	}]);
 
-	// Physics engine and entities
-	this.teams = {player: [], enemy: []};
-	this.world = new p2.World();
+	// Create level structures
+	this.time = new time.Time(this);
+	this._tweens = new tween.TweenManager();
+	this.hud = new hud.Hud();
+	this.buffers = [vec2.create(), vec2.create()];
+	this.world.clear();
 	this.camera = new camera.Camera({
 		leading: g.Leading / g.Speed,
 		offsetX: 20,
 	});
-	this.buffers = [
-		vec2.create(),
-		vec2.create(),
-	];
-
-	// Initial state
 	this.nextSegment();
 	this.spawn('Player', {});
-	physics.settle(this.world, 1 / param.Rate, 3.0);
 	this.camera.reset();
-	this.world.on("beginContact", this._beginContact.bind(this));
-}
+	this.score = 0;
+	this.bonus = 1;
 
-/*
- * Initialize the screen.
- */
-Game.prototype.init = function(r) {
-	this.background.init(r);
-	this.tiles.init(r);
-	this.sprites.init(r);
-	control.game.enable();
+	this.message(
+		new text.Layout({
+			position: [param.Width / 2, param.Height / 2],
+		}).addLine({ text: 'Blast Off!', scale: 4 })
+	);
 };
 
 /*
-y * Destroy the screen
+ * Stop the screen
  */
-Game.prototype.destroy = function(r) {
-	this.background.destroy(r);
-	this.tiles.destroy();
-	this.sprites.destroy();
+GameScreen.prototype.stop = function(r) {
+	this.world.clear();
+	this.time = null;
+	this._tweens = null;
+	_.forOwn(this.teams, function(value) { value.length = 0; });
+
+	text.clear();
+	tiles.clear();
+	sprites.world.clear();
+	poly.ui.clear();
 	control.game.disable();
 };
 
 /*
  * Render the game screen, updating the game state as necessary.
  */
-Game.prototype.render = function(r) {
+GameScreen.prototype.render = function(r) {
 	var gl = r.gl;
 	this.time.update(r.time);
-	var frac = this.time.frac;
-	var bodies = this.world.bodies, i, b, e, curTime;
+	var frac = this.time.frac, curTime = this.time.elapsed;
+	var bodies = this.world.bodies, i, b, e;
 
-	this.sprites.clear();
-	this.lights.clearLocal();
+	sprites.world.clear();
+	sprites.ui.clear();
+	lights.clearLocal();
 	this._tweens.update(this.time.elapsed);
 
 	// If we relied on p2.js to manage update timing, then it would
@@ -129,15 +150,19 @@ Game.prototype.render = function(r) {
 	for (i = 0; i < bodies.length; i++) {
 		e = bodies[i].entity;
 		if (e && e.emit) {
-			e.emit(this);
+			e.emit(curTime);
 		}
 	}
+	this.hud.emit();
 
 	this.camera.update(r, frac);
-	this.lights.update(this.camera);
-	this.background.render(r, this.camera);
-	this.tiles.render(r, this.camera, this.lights);
-	this.sprites.render(r, this.camera);
+	lights.update(this.camera);
+	background.render(r, this.camera);
+	tiles.render(r, this.camera);
+	sprites.world.render(r, this.camera);
+	sprites.ui.render(r, this.camera);
+	poly.ui.render(r, this.camera);
+	text.render(r, this.camera);
 };
 
 /*
@@ -145,7 +170,7 @@ Game.prototype.render = function(r) {
  *
  * dt: The timestep, in s
  */
-Game.prototype.step = function(dt) {
+GameScreen.prototype.step = function(dt) {
 	var bodies = this.world.bodies, i, ents, e, team, lock;
 
 	if (this.camera._pos1[0] > this.buffers[1][0]) {
@@ -154,7 +179,6 @@ Game.prototype.step = function(dt) {
 
 	control.game.update();
 
-	this._tweens.prune(function(e) { return e.body && e.body.world; });
 	this._tweens.updateTime(this.time.elapsed);
 
 	ents = [];
@@ -200,6 +224,7 @@ Game.prototype.step = function(dt) {
 		}
 	}
 
+	this.hud.step(this);
 	this.world.step(dt);
 	this.camera.step();
 };
@@ -207,8 +232,8 @@ Game.prototype.step = function(dt) {
 /*
  * Transition to the next segment.
  */
-Game.prototype.nextSegment = function() {
-	console.log('Next segment');
+GameScreen.prototype.nextSegment = function() {
+	// console.log('Next segment');
 
 	// Figure out which bodies to keep
 	var bodies = this.world.bodies, i, b, e, keep = [];
@@ -237,11 +262,11 @@ Game.prototype.nextSegment = function() {
 		vec2.add(b.position, b.position, offset);
 		this.world.addBody(b);
 	}
-	this.background.addOffset(offset);
+	background.addOffset(offset);
 	this.camera.addOffset(offset);
 };
 
-Game.prototype._beginContact = function(evt) {
+GameScreen.prototype._beginContact = function(evt) {
 	var a = evt.bodyA, b = evt.bodyB, eq = evt.contactEquations;
 	if (a.entity && a.entity.onContact) {
 		a.entity.onContact(this, eq, b);
@@ -254,7 +279,7 @@ Game.prototype._beginContact = function(evt) {
 /*
  * Construct an entity and spawn it.
  */
-Game.prototype.spawn = function(type, args) {
+GameScreen.prototype.spawn = function(type, args) {
 	var ctor = entity.getType(type);
 	if (!ctor) {
 		console.error('No such type: ' + type);
@@ -266,7 +291,7 @@ Game.prototype.spawn = function(type, args) {
 /*
  * Spawn an entity which is already constructed.
  */
-Game.prototype.spawnObj = function(ent) {
+GameScreen.prototype.spawnObj = function(ent) {
 	var body = ent.body;
 	if (!body) {
 		console.warn('Could not spawn entity');
@@ -291,7 +316,7 @@ Game.prototype.spawnObj = function(ent) {
  * options.direction: Direction to favor in search
  * options.angle
  */
-Game.prototype.scan = function(options) {
+GameScreen.prototype.scan = function(options) {
 	var team = this.teams[options.team];
 	if (team.length === 0) {
 		// console.log('Nothing to scan for');
@@ -351,9 +376,35 @@ Game.prototype.scan = function(options) {
  * target: Entity to modify (must be an entity!)
  * props: Options ('loop' is one)
  */
-Game.prototype.tween = function() {
+GameScreen.prototype.tween = function() {
 	return this._tweens.tween.apply(this._tweens, arguments);
 };
 
-// We export through the state module.
-state.Game = Game;
+/*
+* Display a message on the screen.
+*/
+GameScreen.prototype.message = function(layout) {
+	var pos = vec2.clone(layout.position);
+	layout.position[1] = -100;
+	text.addLayout(layout);
+	this.tween(layout)
+		.to({ position: pos }, 1.0, 'SwiftOut')
+		.wait(0.3)
+		.to({ color: color.Transparent }, 0.5)
+		.callback(function() { text.removeLayout(layout); })
+		.start();
+};
+
+GameScreen.prototype.award = function(pts) {
+	if (isNaN(pts)) {
+		return;
+	}
+	var amt = this.bonus * pts;
+	if (amt > 0) {
+		this.score += amt;
+	}
+};
+
+module.exports = {
+	GameScreen: GameScreen,
+};

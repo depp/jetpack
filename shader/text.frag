@@ -3,9 +3,9 @@ precision lowp float;
 varying vec2 vTexCoord;
 varying vec4 vColor;
 
-uniform sampler2D SpriteSheet;
+uniform sampler2D Font;
 
 void main() {
-    float a = texture2D(SpriteSheet, vTexCoord).r;
+    float a = texture2D(Font, vTexCoord).r;
     gl_FragColor = a * vColor;
 }

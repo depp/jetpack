@@ -41,9 +41,11 @@ function filterDestroy(r) {
 	var gl = r.gl;
 	if (this.prog) {
 		this.prog.destroy();
+		this.prog = null;
 	}
-	if (this.vbuf) {
-		gl.deleteBuffer(this.vbuf);
+	if (this._vbuf) {
+		gl.deleteBuffer(this._vbuf);
+		this._vbuf = null;
 	}
 }
 

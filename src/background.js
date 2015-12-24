@@ -31,15 +31,6 @@ Background.prototype._set = function(obj) {
 Background.prototype.init = function(r) {};
 
 /*
- * Destroy the background.
- */
-Background.prototype.destroy = function(r) {
-	if (this._filter) {
-		this._filter.destroy(r);
-	}
-};
-
-/*
  * Render the background.
  */
 Background.prototype.render = function(r, camera) {
@@ -84,6 +75,40 @@ Background.prototype.setGrid = function() {
 	});
 };
 
+Background.prototype.setBoxes = function() {
+	var scale = [5, 4, 3, 2];
+	var parallax = [0.2, 0.4, 0.6, 0.8];
+	var n = 4;
+	var layer = new Float32Array(n * 4);
+	for (var i = 0; i < n; i++) {
+		var a = Math.random() * 2 * Math.PI, s = scale[i];
+		layer[i*4+0] = (Math.random() - 0.5) * 64;
+		layer[i*4+1] = (Math.random() - 0.5) * 64;
+		layer[i*4+2] = scale[i];
+		layer[i*4+3] = parallax[i];
+	}
+	var lc = new Float32Array([
+		0.0, 0.0, 1.0, 0.5,
+		0.0, 1.0, 0.0, 0.5,
+		1.0, 1.0, 0.0, 0.5,
+		1.0, 0.0, 0.0, 0.5,
+	]);
+	this._set({
+		shader: 'boxbg',
+		uniforms: 'Xform Time Layer Color Offset',
+		updateUniforms: function(r) {
+			var gl = r.gl, p = this.prog;
+			gl.uniform4fv(p.Xform, [
+				2 * r.aspect / r.width, 2 / r.height, -r.aspect, -1]);
+			gl.uniform1f(p.Time, r.time * 1e-3 * 0.25);
+			gl.uniform4fv(p.Layer, layer);
+			gl.uniform4fv(p.Color, lc);
+			var sc = 0.1;
+			gl.uniform2f(p.Offset, this.pos[0] * sc, this.pos[1] * sc);
+		},
+	});
+};
+
 // Add an offset to the background
 Background.prototype.addOffset = function(offset) {
 	if (!this._filter) {
@@ -92,6 +117,4 @@ Background.prototype.addOffset = function(offset) {
 	vec2.subtract(this._filter.offset, this._filter.offset, offset);
 };
 
-module.exports = {
-	Background: Background,
-};
+module.exports = new Background();

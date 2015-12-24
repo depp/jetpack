@@ -109,6 +109,4 @@ Lights.prototype.update = function(camera) {
 	locs.fill(0, (MaxGlobal + n) * 4);
 };
 
-module.exports = {
-	Lights: Lights,
-};
+module.exports = new Lights();

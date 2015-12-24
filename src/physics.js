@@ -180,6 +180,19 @@ function adjustVelocity(body, vel, accel) {
 	v[1] += dy;
 }
 
+/*
+ * Change the properties of a body to make it behave like a corpse.
+ */
+function corpsify(body) {
+	body.gravityScale = 1;
+	body.mass *= 0.5;
+	body.fixedRotation = false;
+	body.updateMassProperties();
+	_.forEach(body.shapes, function(s) {
+		s.material = Material.Bouncy;
+	});
+}
+
 module.exports = {
 	Material: Material,
 	Mask: Mask,
@@ -189,4 +202,5 @@ module.exports = {
 	deltaAngle: deltaAngle,
 	adjustAngle: adjustAngle,
 	adjustVelocity: adjustVelocity,
+	corpsify: corpsify,
 };

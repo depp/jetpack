@@ -3,8 +3,10 @@
    This file is part of Dash and the Jetpack Space Pirates.  The Dash
    and the Jetpack Space Pirates source code is distributed under the
    terms of the MIT license.  See LICENSE.txt for details. */
+'use strict';
 
 var color = require('./color');
+var lights = require('./lights');
 var load = require('./load');
 var shader = require('./shader');
 var util = require('./util');
@@ -80,24 +82,9 @@ Tiles.prototype.init = function(r) {
 };
 
 /*
- * Destroy the tile layer.
- */
-Tiles.prototype.destroy = function(r) {
-	if (this.program) {
-		this.program.destroy(r);
-	}
-	if (this.vbuffer) {
-		r.gl.deleteBuffer(this.vbuffer);
-	}
-	if (this.ibuffer) {
-		r.gl.deleteBuffer(this.ibuffer);
-	}
-};
-
-/*
  * Draw the tile layer.
  */
-Tiles.prototype.render = function(r, camera, lights) {
+Tiles.prototype.render = function(r, camera) {
 	var gl = r.gl;
 	var i;
 
@@ -257,6 +244,4 @@ Tiles.prototype.add = function(tiles) {
 	this.vdirty = true;
 };
 
-module.exports = {
-	Tiles: Tiles,
-};
+module.exports = new Tiles();

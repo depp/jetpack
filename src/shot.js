@@ -12,6 +12,7 @@ var color = require('./color');
 var entity = require('./entity');
 var param = require('./param');
 var physics = require('./physics');
+var sprites = require('./sprites');
 var util = require('./util');
 
 var ReticleColor = color.rgb(0.9, 0.1, 0.1);
@@ -75,8 +76,8 @@ function Explosion(game, args) {
 	this.damage = args.damage;
 }
 Explosion.prototype = {
-	emit: function(game) {
-		game.sprites.add({
+	emit: function(curTime) {
+		sprites.world.add({
 			position: this.body.interpolatedPosition,
 			radius: 3.0,
 			color: color.White,
@@ -173,9 +174,9 @@ Shot.prototype = {
 		}
 		*/
 	},
-	emit: function(game) {
+	emit: function(curTime) {
 		var t = this.type;
-		game.sprites.add({
+		sprites.world.add({
 			position: this.body.interpolatedPosition,
 			radius: 1.5,
 			color: t.color,
@@ -183,7 +184,7 @@ Shot.prototype = {
 			angle: this.body.interpolatedAngle - Math.PI * 0.5,
 		});
 		if (t.guidance && !this.isEnemy) {
-			t.guidance.emit(game, this);
+			t.guidance.emit(curTime, this);
 		}
 	},
 	onContact: function(game, eq, body) {
@@ -328,12 +329,12 @@ Homing.prototype = {
 			Math.cos(a) * speed,
 			Math.sin(a) * speed);
 	},
-	emit: function(game, shot) {
+	emit: function(curTime, shot) {
 		var target = shot.targetLock;
 		if (!target || !target.body) {
 			return;
 		}
-		game.sprites.add({
+		sprites.world.add({
 			position: target.body.interpolatedPosition,
 			radius: 2.0,
 			color: ReticleColor,
