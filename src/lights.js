@@ -25,10 +25,15 @@ function Lights() {
  * Clear all lights.
  */
 Lights.prototype.clear = function() {
+	var i, n;
 	this._global = 0;
 	this._local = [];
-	this.colors.fill(0);
-	this.locs.fill(0);
+	for (i = 0, n = (MaxGlobal + MaxLocal) * 4; i < n; i++) {
+		this.colors[i] = 0;
+	}
+	for (i = 0, n = (MaxGlobal + MaxLocal) * 4; i < n; i++) {
+		this.locs[i] = 0;
+	}
 };
 
 /*
@@ -105,8 +110,17 @@ Lights.prototype.update = function(camera) {
 		locs[i0+2] = it.height;
 		locs[i0+3] = 0;
 	}
-	colors.fill(0, (MaxGlobal + n) * 4);
-	locs.fill(0, (MaxGlobal + n) * 4);
+	for (; i < MaxLocal; i++) {
+		i0 = (MaxGlobal + i) * 4;
+		colors[i0+0] = 0;
+		colors[i0+1] = 0;
+		colors[i0+2] = 0;
+		colors[i0+3] = 0;
+		locs[i0+0] = 0;
+		locs[i0+1] = 0;
+		locs[i0+2] = 0;
+		locs[i0+3] = 0;
+	}
 };
 
 module.exports = new Lights();
